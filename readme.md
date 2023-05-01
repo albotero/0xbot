@@ -1,7 +1,7 @@
 # 0xBot Trading Software
 
 `0xbot` is a python project created to perform automatic trading in crypto exchanges 24/7.
-Initially it can trade any pair in Binance exchange through their AP
+Initially it can trade any pair in Binance exchange through their API.
 
 # First of all ...
 
@@ -120,7 +120,7 @@ $ python3 main.py
 
 After a successful connection to Binance API is made, all trading pairs against the specified quote _(e.g. BUSD)_ are retrieved along with the trading commisions charged by the exchange. The strategy will be run over all these pairs. Currently only _Spot Trading_ is implemented.
 
-> Default quote BUSD can be modified in `bot-config.json`
+Default quote BUSD can be modified in `bot-config.json`
 
 When running in test mode only 6 trading pairs with BUSD quote are provided by the exchange. There are ~317 assets in live mode.
 
@@ -130,37 +130,37 @@ If the account has free balances of any of the retrieved assets that can be trad
 
 ![Screenshot of previous balances sold](/res/img/previous-balances.png "Screenshot of previous balances sold")
 
-> Please note that actual sold amount may be less than account balance for this asset, since market fees are charged by and step size is limited by the exchange. The rest of the asset is going to remain in your account as dust.
+Please note that actual sold amount may be less than account balance for this asset, since market fees are charged by and step size is limited by the exchange. The rest of the asset is going to remain in your account as dust.
 
 ## Analysis
 
 The analysis refers to the strategy development. Each asset is analyzed and, if defined conditions are met, a buy or sell order is emitted.
 
-At the end of each analysis the following info is shown:
+At the end of each analysis this data will appear:
 
-- **Long orders:** the open positions _(i.e. bought assets)_ at the current time. Along with the asset's symbol, entry price _(i.e. price at which the asset was bought)_, mark price _(i.e. current price of the asset against the quote)_ and profit of that order are provided.
+- **Long orders:** Current open positions _(i.e. bought assets)_. Asset symbol _(e.g. BTC)_, entry price _(i.e. price at which the asset was bought)_, mark price _(i.e. current price of the asset against the quote)_ and unrealized profit of that order are provided.
 
-- **Unrealized profit:** profit since the start of the strategy, includes appreciation/devaluation of assets that hasn't been sold yet.
+- **Unrealized profit:** Global profit since the start of the strategy, includes appreciation/devaluation of assets that haven't been sold yet.
 
-- **Realized profit:** profit since the start of the strategy, only include assets that were bought and then sold back.
+- **Realized profit:** Global profit since the start of the strategy, only include assets that were bought and then sold back.
 
-Once the strategy is deployed and after each analysis, an `... idle ...` message will appear until the current candle in the selected timeframe closes and the corresponding analysis can be done.
+Once the strategy is deployed and after each analysis, an `... idle ...` message will appear until the current candle in the selected timeframe closes and the next analysis can be done.
 
 !["Screenshot of Pump Strategy analysis"](/res/img/pump-analysis.png "Screenshot of Pump Strategy analysis")
 
 # Trading Strategies
 
-Currently the only strategy implemented is _Pump Strategy_, so it is used by default. In a latter version when more strategies are added, user will be prompted at start to select which one to use.
+Currently the _Pump Strategy_ is the only one implemented so it is used by default. In a latter version when more strategies are added, user will be prompted at start to select which one to use.
 
 ## Pump
 
 Pump strategy checks last _n_ candles, and if all of them closed over a determined percentage from the previous one, the asset is bought to seize the uptrend.
 
-Once any latter candle price closes at or less than 50% of its predecesor's body, the asset is sold to realize the profit.
+Once any latter candle price closes at or less than 50% of its predecesor's body, the asset is sold to either realize the profit or cut losses.
 
 ### Settings
 
-You may use `bot-config.json` to set custom configuration for the strategy:
+You may configure the strategy through `bot-config.json`:
 
 - **"candle-count":** Number of candles to be analyzed in order to define whether a pump in price is going on. **_Default: 3_**
 - **"percentage-rise":** How much a candle needs to rise respect the previous one to be counted as part of a pump. Use percentage without the symbol _(e.g. for 1% just input 1)_. **_Default: 0.5_**
@@ -203,24 +203,11 @@ If this project has been useful to you and you want to support me, feel free to 
   <!-- prettier-ignore -->
   | Network | Wallet address |
   |:---:|:---:|
-  | <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/1.png" alt="Bitcoin" title="Bitcoin" class="icon"> | bc1q7n8ne2740hwxzldl88vwug95m5rrjxw5a480rh |
-  | <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png" alt="Ethereum" title="Ethereum" class="icon"> <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png" alt="BSC" title="Binance Smart Chain (BSC)" class="icon"><br/><img src="https://s2.coinmarketcap.com/static/img/coins/64x64/3890.png" alt="Polygon" title="Polygon" class="icon"> <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/5994.png" alt="Shiba Inu" title="Shiba Inu"  class="shib"> ... | 0xB72030640bAD1f25CD596E14554Cb8833970011E |
-  | <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/74.png" alt="Dogecoin" title="Dogecoin" class="icon"> | DF6Sn9dMmWV3fxT4sGuMHw2Bz3X28HoiDv |
-  | <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/2.png" alt="Litecoin" title="Litecoin" class="icon"> | ltc1q2ca9tvl9ru9zz6khdcuq6wdp08fsfu7sakm3p4 |
+  | <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/1.png" alt="Bitcoin" title="Bitcoin" width="20" height="20" style="margin-bottom: -5px;"> | bc1q7n8ne2740hwxzldl88vwug95m5rrjxw5a480rh |
+  | <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png" alt="Ethereum" title="Ethereum" width="20" height="20" style="margin-bottom: -5px;"> <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png" alt="BSC" title="Binance Smart Chain (BSC)" width="20" height="20" style="margin-bottom: -5px;"><br/><img src="https://s2.coinmarketcap.com/static/img/coins/64x64/3890.png" alt="Polygon" title="Polygon" width="20" height="20" style="margin-bottom: -5px;"> <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/5994.png" alt="Shiba Inu" title="Shiba Inu"   width="27" height="27" style="margin: 0 -4px -9px -3.5px;"> ... | 0xB72030640bAD1f25CD596E14554Cb8833970011E |
+  | <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/74.png" alt="Dogecoin" title="Dogecoin" width="20" height="20" style="margin-bottom: -5px;"> | DF6Sn9dMmWV3fxT4sGuMHw2Bz3X28HoiDv |
+  | <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/2.png" alt="Litecoin" title="Litecoin" width="20" height="20" style="margin-bottom: -5px;"> | ltc1q2ca9tvl9ru9zz6khdcuq6wdp08fsfu7sakm3p4 |
 
 - Visit my [LinkedIn profile](https://www.linkedin.com/in/botdev92/) and write a Recommendation!
 
 - Follow me on [Twitter](https://twitter.com/botdev92).
-
-<style type="text/css">
-    img.icon {
-        height: 20px;
-        width: 20px;
-        margin-bottom: -5px;
-    }
-    img.shib {
-        height: 27px;
-        width: 27px;
-        margin: 0 -4px -9px -3.5px;
-    }
-</style>
