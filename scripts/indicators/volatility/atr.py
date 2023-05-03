@@ -13,10 +13,10 @@ def atr(data: DataFrame, periods: int = 14, return_data: bool = True) -> str | S
     # Calculate TR
     _tr = data[["close", "high", "low"]].apply(lambda row: tr(*row), axis=1)
     # ATR = SMA(TR)
-    atr = _tr.rolling(periods, min_periods=0).mean()
+    _atr = _tr.rolling(periods, min_periods=0).mean()
     if return_data:
-        return atr
-    # Modify DataFrame
-    header = f"atr-{periods}"
-    data[header] = atr
+        return _atr
+    # Update DataFrame
+    header = f"atr({periods})"
+    data[header] = _atr
     return header

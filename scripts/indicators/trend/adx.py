@@ -21,12 +21,12 @@ def adx(data: DataFrame, periods: int = 14) -> list[str]:
     # DI = | +DI - -DI | / | +DI + -DI |  * 100
     di = ((plus_di - minus_di).abs() / (plus_di + minus_di).abs()).mul(100)
     # ADX = SMA(TR)
-    adx = di.rolling(periods, min_periods=0).mean()
-    # Add data to dataframe
-    headers = [f"-di-{periods}",
-               f"adx-{periods}",
-               f"+di-{periods}"]
+    _adx = di.rolling(periods, min_periods=0).mean()
+    # Update DataFrame
+    headers = [f"-di({periods})",
+               f"adx({periods})",
+               f"+di({periods})"]
     data[headers[0]] = minus_di
-    data[headers[1]] = adx
+    data[headers[1]] = _adx
     data[headers[2]] = plus_di
     return headers
