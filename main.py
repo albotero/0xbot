@@ -1,5 +1,5 @@
 from scripts.exchanges.binance_conn import BinanceConn
-from scripts.objects.console import C, I
+from scripts.console import C, I
 from scripts.strategy import Strategy
 from scripts.strategies.pump import Pump
 import json

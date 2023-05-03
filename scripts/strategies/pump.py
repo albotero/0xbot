@@ -1,5 +1,5 @@
+from pandas import DataFrame
 from scripts.strategy import determine_percent_rise, StrategyInterface
-import pandas
 
 
 class Pump(StrategyInterface):
@@ -13,7 +13,7 @@ class Pump(StrategyInterface):
         self.candle_count = candle_count
         self.percentage_rise = percentage_rise
 
-    def determine_buy_event(self, candles: pandas.DataFrame) -> bool:
+    def determine_buy_event(self, candles: DataFrame) -> bool:
         ''' Overrides StrategyInterface.determine_buy_event() '''
         # Determine if last values were bullish
         if all([t == "bull" for t in list(candles["trend"])]):
@@ -24,7 +24,7 @@ class Pump(StrategyInterface):
                 self.stop_loss = candles.loc[self.candle_count - 1, "open"]
                 return True
 
-    def determine_sell_event(self, candles: pandas.DataFrame) -> bool:
+    def determine_sell_event(self, candles: DataFrame) -> bool:
         ''' Overrides StrategyInterface.determine_sell_event() '''
         # Sell if candle closed below 50% of last candle
         prev_candle_index = self.candle_count - 2

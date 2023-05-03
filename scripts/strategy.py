@@ -3,7 +3,7 @@ from datetime import datetime
 from scripts.common import round_float
 from scripts.exchange import ExchangeInterface
 from scripts.objects.coin import Coin
-from scripts.objects.console import *
+from scripts.console import *
 import time
 
 
@@ -44,7 +44,7 @@ class Strategy:
         # Update console
         total_symbols = len(self.exchange.symbols)
         mode = "TEST" if self.exchange.test_mode else "LIVE"
-        print("\r" + C.Style("{} MODE ~ {} Strategy".format(mode, self.strategy.name), C.BOLD, C.PURPLE))
+        print("\r" + C.Style(f"{mode} MODE ~ {self.strategy.name} Strategy", C.BOLD, C.PURPLE))
         print(C.Style(f"Analysis :: {total_symbols} assets @ {datetime.now().strftime('%Y-%m-%d %I:%M:%S %p')}",
                       C.DARKCYAN))
         # Iterate through the symbols
@@ -65,7 +65,7 @@ class Strategy:
                 analysis = self.execute_sell(asset)
             # Update screen
             print("\r ", I.CLOCK,
-                  C.Style("{:<12}".format(asset.strsymbol), C.CYAN),
+                  C.Style(f"{asset.strsymbol:<12}", C.CYAN),
                   analysis if analysis else progress_bar(analyzed_index, total_symbols) + " " * 5,
                   end="")
             # Update waiting
@@ -191,10 +191,15 @@ def timeframe_to_seconds(timeframe) -> float:
     ''' Converts a timeframe string to equivalent number of seconds '''
     base = float(timeframe[:-1])
     time_unit = timeframe[-1:]
-    match time_unit:
-        case "s": return base
-        case "m": return base * 60
-        case "h": return base * 60 * 60
-        case "D": return base * 60 * 60 * 24
-        case "W": return base * 60 * 60 * 24 * 7
-        case "M": return base * 60 * 60 * 24 * 30
+    if time_unit == "s":
+        return base
+    elif time_unit == "m":
+        return base * 60
+    elif time_unit == "h":
+        return base * 60 * 60
+    elif time_unit == "D":
+        return base * 60 * 60 * 24
+    elif time_unit == "W":
+        return base * 60 * 60 * 24 * 7
+    elif time_unit == "M":
+        return base * 60 * 60 * 24 * 30

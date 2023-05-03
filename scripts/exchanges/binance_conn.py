@@ -1,12 +1,12 @@
 import json
+import numpy
 from binance.error import ClientError
 from binance.spot import Spot
+from pandas import DataFrame, to_datetime
 from scripts.common import float_to_precision, round_float
 from scripts.exchange import ExchangeInterface
 from scripts.objects.coin import Coin
-from scripts.objects.console import C, I
-import numpy
-import pandas
+from scripts.console import C, I
 
 
 class BinanceConn(ExchangeInterface):
@@ -39,7 +39,7 @@ class BinanceConn(ExchangeInterface):
         # Retrieve data
         symbol_dictionary = self.client.exchange_info()
         # Convert into a dataframe
-        symbol_dataframe = pandas.DataFrame(symbol_dictionary['symbols'])
+        symbol_dataframe = DataFrame(symbol_dictionary['symbols'])
         # Extract only those symbols with a base asset of Quote and status of TRADING
         quote_symbol_dataframe = symbol_dataframe.loc[symbol_dataframe['quoteAsset'] == quote_asset_symbol]
         quote_symbol_dataframe = quote_symbol_dataframe.loc[quote_symbol_dataframe['status'] == "TRADING"]
@@ -125,7 +125,7 @@ class BinanceConn(ExchangeInterface):
         # Retrieve the raw data from Binance
         raw_data = self.get_candlestick_data(symbol, timeframe, qty)
         # Transform raw_data into a Pandas DataFrame
-        df_data = pandas.DataFrame(raw_data)
+        df_data = DataFrame(raw_data)
         # Convert the time to human readable format
         df_data["time"] = self.readable_time(df_data["time"])
         df_data["close_time"] = self.readable_time(df_data["close_time"])
@@ -135,7 +135,7 @@ class BinanceConn(ExchangeInterface):
         return df_data
 
     def readable_time(self, time):
-        return pandas.to_datetime(time, unit="ms", utc=True).map(lambda x: x.tz_convert("America/Bogota"))
+        return to_datetime(time, unit="ms", utc=True).map(lambda x: x.tz_convert("America/Bogota"))
 
     def make_trade(self, params):
         ''' Execute a trade on the exchange and returns
