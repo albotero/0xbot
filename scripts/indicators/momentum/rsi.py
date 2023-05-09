@@ -13,7 +13,7 @@ def rsi(data: DataFrame, periods: int = 14) -> str:
     ema_d = d.ewm(alpha=1/periods, min_periods=0, adjust=False).mean()
     # Calculate Relative Strength
     rs = ema_u / ema_d
-    _rsi = rs.apply(lambda row: 100 - (100 / (1 + row)))
+    _rsi = rs.apply(lambda val: 100 - (100 / (1 + val)))
     # Update DataFrame
     header = f"rsi({periods})"
     data[header] = _rsi

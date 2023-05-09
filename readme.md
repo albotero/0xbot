@@ -104,6 +104,8 @@ Once you are confident with the bot functioning and your trading strategy, updat
 }
 ```
 
+remember to allow spot and futures trading in api management as well as white list your ip address
+
 </ol>
 
 # Usage
@@ -120,7 +122,7 @@ $ python3 main.py
 
 After a successful connection to Binance API is made, all trading pairs against the specified quote _(e.g. BUSD)_ are retrieved along with the trading commisions charged by the exchange. The strategy will be run over all these pairs. Currently only _Spot Trading_ is implemented.
 
-Default quote BUSD can be modified in `bot-config.json`
+Default quote BUSD can be modified in `bot-config.json`. Check Fee Tiers for each quote asset at [Binance Fee Rate](https://www.binance.com/en/fee)
 
 When running in test mode only 6 trading pairs with BUSD quote are provided by the exchange. There are ~317 assets in live mode.
 

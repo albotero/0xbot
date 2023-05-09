@@ -10,8 +10,18 @@ class C:
     UNDERLINE = "\033[4m"
     END = "\033[0m"
 
-    def Style(text, *style) -> str:
-        return "{}{}{}".format("".join(style), text, C.END)
+    def Style(text, *style, pad_left: int = 0, pad_center: int = 0, pad_right: int = 0) -> str:
+        if pad_left:
+            return "{style_start}{text:<{pad}}{style_end}".format(
+                style_start="".join(style), text=text, pad=pad_left, style_end=C.END)
+        if pad_center:
+            return "{style_start}{text:^{pad}}{style_end}".format(
+                style_start="".join(style), text=text, pad=pad_center, style_end=C.END)
+        if pad_right:
+            return "{style_start}{text:>{pad}}{style_end}".format(
+                style_start="".join(style), text=text, pad=pad_right, style_end=C.END)
+        return "{style_start}{text}{style_end}".format(
+            style_start="".join(style), text=text, style_end=C.END)
 
 
 class I:

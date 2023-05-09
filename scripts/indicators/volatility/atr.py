@@ -6,7 +6,7 @@ def tr(close: float, high: float, low: float) -> float:
     return max((high - low), abs(high - close), abs(low - close))
 
 
-def atr(data: DataFrame, periods: int = 14, return_data: bool = True) -> str | Series:
+def atr(data: DataFrame, periods: int = 14, return_data: bool = False) -> str | Series:
     ''' Average True Range
 
     Return Header: ATR '''
