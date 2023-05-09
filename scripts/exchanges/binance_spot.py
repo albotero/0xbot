@@ -185,12 +185,18 @@ class BinanceSpot(ExchangeInterface):
     ) -> str:
         """Creates an order on Binance and its SL and TP orders
 
-        :param symbol: pair to trade (e.g. "BTCBUSD")
-        :param direction: Direction of the trade
-        :param qty: amount of the trade
-        :param price: price for the limit order
-        :param sl: stop loss price or callback rate if trailing SL
-        :param tl: take profit price"""
+        Parameters
+        ----------
+        symbol: pair to trade (e.g. "BTCBUSD")
+        direction: Direction of the trade
+        qty: amount of the trade
+        price: price for the limit order
+        sl: stop loss price
+        tl: take profit price
+
+        Returns
+        -------
+        Order IDs if successful or error message"""
         # Floats to Strings
         qty = str(qty)
         price = str(price)

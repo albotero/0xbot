@@ -10,16 +10,18 @@ from scripts.indicators.indicator import Indicator, Signal, Direction
 class FuturesStrategy:
     """Open long/short positions with SL/TSL/TP
 
-    :param name: name to identify the strategy on command line
-    :param exchange: exchange interface
-    :param signals: list of Signal objects with the desired Indicators
-    :param order_value: percentage of balance for each trade (0 to 100)
-    :param risk_reward_ind: percentage for stop loss (0 to 100) or Indicator (e.g. ATR)
-    :param risk_reward_ratio: reward expected for the risk
-    :param timeframe: candlesticks timeframe
-    :param leverage: leverage for the trades
-    :param min_signals_percentage: percentage of signals to place an order
-    :param trailing_stop: whether to trail or not stop loss"""
+    Parameters
+    ----------
+    name: name to identify the strategy on command line
+    exchange: exchange interface
+    signals: list of Signal objects with the desired Indicators
+    order_value: percentage of balance for each trade (0 to 100)
+    risk_reward_ind: percentage for stop loss (0 to 100) or Indicator (e.g. ATR)
+    risk_reward_ratio: reward expected for the risk
+    timeframe: candlesticks timeframe
+    leverage: leverage for the trades
+    min_signals_percentage: percentage of signals to place an order
+    trailing_stop: whether to trail or not stop loss"""
 
     def __init__(
         self,

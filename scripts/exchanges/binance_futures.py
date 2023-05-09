@@ -148,14 +148,20 @@ class BinanceFutures(ExchangeInterface):
     ) -> str:
         """Creates an order on Binance and its SL and TP orders
 
-        :param symbol: pair to trade (e.g. "BTCBUSD")
-        :param direction: Direction of the trade
-        :param qty: amount of the trade
-        :param price: price for the limit order
-        :param sl: stop loss price or callback rate if trailing SL
-        :param tl: take profit price
-        :param trailing_sl: whether to trail SL or not
-        :param leverage: by default doesn't use leverage"""
+        Parameters
+        ----------
+        symbol: pair to trade (e.g. "BTCBUSD")
+        direction: Direction of the trade
+        qty: amount of the trade
+        price: price for the limit order
+        sl: stop loss price or callback rate if trailing SL
+        tl: take profit price
+        trailing_sl: whether to trail SL or not
+        leverage: by default doesn't use leverage
+
+        Returns
+        -------
+        Order IDs if successful or error message"""
         # Set leverage
         self.client.change_leverage(symbol=symbol, leverage=leverage)
         # Floats to Strings

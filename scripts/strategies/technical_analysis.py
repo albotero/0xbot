@@ -4,8 +4,14 @@ from scripts.markets.futures import FuturesStrategy
 from scripts.markets.spot import SpotStrategy
 
 
-def technical_analysis(exchange: ExchangeInterface, market: str) -> "FuturesStrategy | SpotStrategy":
-    """Define a Strategy"""
+def technical_analysis(exchange: ExchangeInterface, market: str) -> None:
+    """Generate buy/sell signals for the given indicators
+
+    Parameters
+    ----------
+    exchange: Interface to Exchange's API
+    market: "futures" or "spot"
+    """
     signals = [
         # Price is above/below long-term DEMA to confirm trend
         Signal(
@@ -52,7 +58,7 @@ def technical_analysis(exchange: ExchangeInterface, market: str) -> "FuturesStra
             leverage=5,
             order_value=1,
             signals=signals,
-            timeframe="4h",
+            timeframe="15m",
             risk_reward_ind=Indicator(Indicator.TYPE_ATR, {"periods": 14}),
             risk_reward_ratio=3,
             trailing_stop=True,
