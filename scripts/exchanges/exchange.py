@@ -5,11 +5,11 @@ from scripts.indicators.indicator import Direction
 
 
 class ExchangeInterface(metaclass=ABCMeta):
-    account: dict[str, bool | float | int]
+    account: "dict[str, bool | float | int]"
     candlesticks: dict[str, DataFrame]
-    balance: dict[str, dict[str, float]] | None
+    balance: "dict[str, dict[str, float]] | None"
     positions: dict[str, dict[str, float]]
-    symbols: dict[str, dict[str, str | float]]
+    symbols: "dict[str, dict[str, str | float]]"
     quote_asset: str
     test_mode: bool
 

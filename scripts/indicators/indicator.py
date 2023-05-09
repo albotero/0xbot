@@ -45,11 +45,11 @@ class Indicator:
         TYPE_BB: bb,
     }
 
-    def __init__(self, indicator_type: str, kwargs: dict[str, int | bool] = None) -> None:
+    def __init__(self, indicator_type: str, kwargs: dict[str, "int | bool"] = None) -> None:
         self.indicator_type = indicator_type
         self.function_kwargs = kwargs
 
-    def analyze_data(self, data: DataFrame) -> str | list[str]:
+    def analyze_data(self, data: DataFrame) -> "str | list[str]":
         """Execute analysis funciton
 
         Returns header(s) of the resulting data in the DataFrame"""
@@ -71,11 +71,11 @@ class Signal:
     def __init__(
         self,
         *,
-        signal_ind: Indicator | None,
+        signal_ind: "Indicator | None",
         signal_header: str,
         buy_limit: float = 0.0,
         sell_limit: float = 0.0,
-        base_ind: Indicator | float | None = None,
+        base_ind: "Indicator | float | None" = None,
         base_header: str = None,
         reverse: bool = False,
     ) -> None:

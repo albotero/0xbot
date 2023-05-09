@@ -24,7 +24,7 @@ class SpotStrategy:
         name: str,
         exchange: ExchangeInterface,
         order_value: float,
-        risk_reward_ind: float | Indicator,
+        risk_reward_ind: "float | Indicator",
         risk_reward_ratio: float,
         signals: list[Signal],
         timeframe: str,
