@@ -44,7 +44,7 @@ class DivergenceSignal:
         # No divergence found
         return Direction.NEUTRAL
 
-    def hl(self, series: Series) -> dir[str:bool]:
+    def hl(self, series: Series) -> dict[str:bool]:
         """Analyze series for 2+ consecutive highs and lows
 
         Parameters
