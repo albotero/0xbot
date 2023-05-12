@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Any
 
 from scripts.exchanges.binance_futures import BinanceFutures
 from scripts.exchanges.binance_spot import BinanceSpot
@@ -38,8 +39,36 @@ def load_bot_config():
     return {
         "market": market,
         "exchange": [test_mode, api_key, secret_key, quote_asset],
-        "strategies": bot_config.get("strategies"),
     }
+
+
+def select_strategy() -> "tuple[str | Any]":
+    strategies = [
+        ("Technical Analysis Example", example_technical_analysis),
+        ("Divergences Example", example_divergences),
+    ]
+    strategy_index = 0
+    if len(strategies) == 0:
+        raise NotImplementedError
+    if len(strategies) > 1:
+        loop = True
+        while loop:
+            try:
+                print()
+                print("You have multiple strategies defined:")
+                for n, strategy in enumerate(strategies):
+                    print(C.Style(f"  [{n}] {strategy[0]}", C.DARKCYAN))
+                strategy_index = int(input("Which strategy would you like to use? Only text its number: "))
+                if strategy_index >= len(strategies):
+                    raise ValueError
+                loop = False
+                print()
+            except ValueError:
+                print(
+                    C.Style(I.CROSS + " Error @ main ::", C.BOLD, C.RED),
+                    C.Style("Invalid strategy number", C.RED),
+                )
+    return strategies[strategy_index]
 
 
 def main():
@@ -61,8 +90,17 @@ def main():
             return
         if bn.account:
             if bn.account["canTrade"]:
-                # example_technical_analysis(exchange=bn, market=settings["market"])
-                example_divergences(exchange=bn, market=settings["market"])
+                # Run the strategy
+                strategy = select_strategy()
+                print(
+                    I.CHECK,
+                    "Running {} @ {} {}".format(
+                        C.Style(strategy[0], C.DARKCYAN),
+                        C.Style("Binance", C.DARKCYAN),
+                        C.Style(settings["market"], C.DARKCYAN),
+                    ),
+                )
+                strategy[1](exchange=bn, market=settings["market"])
 
 
 if __name__ == "__main__":
