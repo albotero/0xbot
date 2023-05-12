@@ -43,13 +43,17 @@ def load_bot_config():
 
 
 def select_strategy() -> "tuple[str | Any]":
+    """Select one of the defined strategies to run"""
+    # Implement strategies
     strategies = [
         ("Technical Analysis Example", example_technical_analysis),
         ("Divergences Example", example_divergences),
     ]
-    strategy_index = 0
+    # No strategies in the list
     if len(strategies) == 0:
         raise NotImplementedError
+    # Multiple strategies, select one
+    strategy_index = 0
     if len(strategies) > 1:
         loop = True
         while loop:
@@ -64,10 +68,12 @@ def select_strategy() -> "tuple[str | Any]":
                 loop = False
                 print()
             except ValueError:
+                # If value is not int or it is > than max for the strategies list
                 print(
                     C.Style(I.CROSS + " Error @ main ::", C.BOLD, C.RED),
                     C.Style("Invalid strategy number", C.RED),
                 )
+    # Return selected or default tuple
     return strategies[strategy_index]
 
 
