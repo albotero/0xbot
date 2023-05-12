@@ -141,9 +141,9 @@ class BinanceFutures(ExchangeInterface):
         direction: Direction,
         qty: float,
         price: float,
-        trailing_sl: bool,
-        sl: float = None,
-        tp: float = None,
+        trailing: bool = True,
+        sl: "float | None" = None,
+        tp: "float | None" = None,
         leverage: int = 1,
     ) -> str:
         """Creates an order on Binance and its SL and TP orders
@@ -158,11 +158,11 @@ class BinanceFutures(ExchangeInterface):
 
         `price`: price for the limit order
 
-        `sl`: stop loss price or callback rate if trailing SL
+        `trailing`: whether to trail stop or not
 
-        `tl`: take profit price
+        `sl`: stop loss price
 
-        `trailing_sl`: whether to trail SL or not
+        `tl`: take profit price or callback rate if trailing
 
         `leverage`: by default doesn't use leverage
 
@@ -182,53 +182,53 @@ class BinanceFutures(ExchangeInterface):
             "price": str(price),
             "reduceOnly": "false",
         }
+        # Change direction for SL and TP
+        direction *= -1
         # Stop loss arguments
         if sl is not None:
             # Trailing SL: 0.1% ≤ Callback rate ≤ 5%
-            sl = min(max(sl, 0.1), 5) if trailing_sl else sl
+            sl = min(max(sl, 0.1), 5) if trailing else sl
             # Activation price for limits: middle between price and limit
             sl_limit = (price + sl) / 2
             # Args
-            if trailing_sl:
-                sl_kwargs = {
-                    "symbol": symbol,
-                    "side": side_from_direction(direction=direction * -1),
-                    "positionSide": "BOTH",
-                    "type": "TRAILING_STOP_MARKET",
-                    "activationPrice": str(sl_limit),
-                    "quantity": str(-qty),
-                    "reduceOnly": "true",
-                    "callbackRate": str(sl),
-                    "workingType": "MARK_PRICE",
-                }
-            else:
-                sl_kwargs = {
-                    "symbol": symbol,
-                    "side": side_from_direction(direction=direction * -1),
-                    "positionSide": "BOTH",
-                    "type": "STOP",
-                    "quantity": str(-qty),
-                    "price": str(sl_limit),
-                    "stopPrice": str(sl),
-                    "closePosition": "true",
-                    "workingType": "MARK_PRICE",
-                }
+            sl_kwargs = {
+                "symbol": symbol,
+                "side": side_from_direction(direction=direction),
+                "positionSide": "BOTH",
+                "type": "STOP",
+                "price": str(sl_limit),
+                "stopPrice": str(sl),
+                "closePosition": "true",
+                "workingType": "MARK_PRICE",
+            }
         # Take profit arguments
         if tp is not None:
             # Activation price for limits: middle between price and limit
             tp_limit = (price + tp) / 2
             # Args
-            tp_kwargs = {
-                "symbol": symbol,
-                "side": side_from_direction(direction=direction * -1),
-                "positionSide": "BOTH",
-                "type": "TAKE_PROFIT",
-                "quantity": str(qty),
-                "price": str(tp_limit),
-                "stopPrice": str(tp),
-                "closePosition": "true",
-                "workingType": "MARK_PRICE",
-            }
+            if trailing:
+                sl_kwargs = {
+                    "symbol": symbol,
+                    "side": side_from_direction(direction=direction),
+                    "positionSide": "BOTH",
+                    "type": "TRAILING_STOP_MARKET",
+                    "activationPrice": str(tp_limit),
+                    "quantity": str(qty),
+                    "reduceOnly": "true",
+                    "callbackRate": str(tp),
+                    "workingType": "MARK_PRICE",
+                }
+            else:
+                tp_kwargs = {
+                    "symbol": symbol,
+                    "side": side_from_direction(direction=direction),
+                    "positionSide": "BOTH",
+                    "type": "TAKE_PROFIT",
+                    "price": str(tp_limit),
+                    "stopPrice": str(tp),
+                    "closePosition": "true",
+                    "workingType": "MARK_PRICE",
+                }
         # Place the trades
         executed_trades: list[int] = []
         try:

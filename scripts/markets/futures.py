@@ -156,7 +156,7 @@ class FuturesStrategy:
         sl = mark_price - rr * direction
         if self.trailing_stop:
             # Trailing stop loss callback rate
-            sl = round(rr / mark_price * 100, 1)
+            tp = round((tp - mark_price) / mark_price * 100, 1)
         # Define order value
         percentage = self.order_value / 100
         val = self.exchange.account["crossWalletBalance"] * percentage * self.leverage / mark_price
