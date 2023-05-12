@@ -1,13 +1,13 @@
 from pandas import DataFrame
 
 
-def ema(data: DataFrame, periods: int) -> None:
-    ''' Exponential Moving Average
+def ema(data: DataFrame, periods: int, header: str = "close") -> None:
+    """Exponential Moving Average
 
-    Return Header: EMA '''
+    Return Header: EMA"""
     # Calculate EMA
-    _ema = data["close"].ewm(alpha=1/periods, min_periods=0, adjust=False).mean()
+    _ema = data[header].ewm(alpha=1 / periods, min_periods=0, adjust=False).mean()
     # Update DataFrame
-    header = f"ema({periods})"
+    header = f"ema({periods})" if header == "close" else f"ema-{header}"
     data[header] = _ema
     return header

@@ -5,6 +5,7 @@ from scripts.common import round_float, seconds_till_next_close
 from scripts.console import C, I, progress_bar
 from scripts.exchanges.exchange import ExchangeInterface
 from scripts.indicators.indicator import Indicator, Signal, Direction
+from scripts.indicators.trend.divergence import DivergenceSignal
 
 
 class FuturesStrategy:
@@ -12,16 +13,25 @@ class FuturesStrategy:
 
     Parameters
     ----------
-    name: name to identify the strategy on command line
-    exchange: exchange interface
-    signals: list of Signal objects with the desired Indicators
-    order_value: percentage of balance for each trade (0 to 100)
-    risk_reward_ind: percentage for stop loss (0 to 100) or Indicator (e.g. ATR)
-    risk_reward_ratio: reward expected for the risk
-    timeframe: candlesticks timeframe
-    leverage: leverage for the trades
-    min_signals_percentage: percentage of signals to place an order
-    trailing_stop: whether to trail or not stop loss"""
+    `name`: name to identify the strategy on command line
+
+    `exchange`: exchange interface
+
+    `signals`: list of Signal objects with the desired Indicators
+
+    `order_value`: percentage of balance for each trade (0 to 100)
+
+    `risk_reward_ind`: percentage for stop loss (0 to 100) or Indicator (e.g. ATR)
+
+    `risk_reward_ratio`: reward expected for the risk
+
+    `timeframe`: candlesticks timeframe
+
+    `leverage`: leverage for the trades
+
+    `min_signals_percentage`: percentage of signals to place an order
+
+    `trailing_stop`: whether to trail or not stop loss"""
 
     def __init__(
         self,
@@ -30,7 +40,7 @@ class FuturesStrategy:
         order_value: float,
         risk_reward_ind: "float | Indicator",
         risk_reward_ratio: float,
-        signals: list[Signal],
+        signals: "list[Signal | DivergenceSignal]",
         timeframe: str,
         leverage: int = 1,
         min_signals_percentage: float = 0.75,
@@ -149,7 +159,7 @@ class FuturesStrategy:
             sl = round(rr / mark_price * 100, 1)
         # Define order value
         percentage = self.order_value / 100
-        val = self.exchange.account["crossWalletBalance"] * percentage / mark_price
+        val = self.exchange.account["crossWalletBalance"] * percentage * self.leverage / mark_price
         # Filter compliance
         filters = self.exchange.symbols[symbol]
         step = filters["step_size"].find("1") - 1

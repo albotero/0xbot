@@ -150,23 +150,27 @@ class BinanceFutures(ExchangeInterface):
 
         Parameters
         ----------
-        symbol: pair to trade (e.g. "BTCBUSD")
-        direction: Direction of the trade
-        qty: amount of the trade
-        price: price for the limit order
-        sl: stop loss price or callback rate if trailing SL
-        tl: take profit price
-        trailing_sl: whether to trail SL or not
-        leverage: by default doesn't use leverage
+        `symbol`: pair to trade (e.g. "BTCBUSD")
+
+        `direction`: Direction of the trade
+
+        `qty`: amount of the trade
+
+        `price`: price for the limit order
+
+        `sl`: stop loss price or callback rate if trailing SL
+
+        `tl`: take profit price
+
+        `trailing_sl`: whether to trail SL or not
+
+        `leverage`: by default doesn't use leverage
 
         Returns
         -------
         Order IDs if successful or error message"""
         # Set leverage
         self.client.change_leverage(symbol=symbol, leverage=leverage)
-        # Floats to Strings
-        qty = str(qty)
-        price = str(price)
         # Main order arguments
         order_kwargs = {
             "symbol": symbol,
@@ -174,24 +178,27 @@ class BinanceFutures(ExchangeInterface):
             "positionSide": "BOTH",
             "type": "LIMIT",
             "timeInForce": "GTC",
-            "quantity": qty,
-            "price": price,
+            "quantity": str(qty),
+            "price": str(price),
             "reduceOnly": "false",
         }
         # Stop loss arguments
         if sl is not None:
             # Trailing SL: 0.1% ≤ Callback rate ≤ 5%
-            sl = str(min(max(sl, 0.1), 5) if trailing_sl else sl)
+            sl = min(max(sl, 0.1), 5) if trailing_sl else sl
+            # Activation price for limits: middle between price and limit
+            sl_limit = (price + sl) / 2
+            # Args
             if trailing_sl:
                 sl_kwargs = {
                     "symbol": symbol,
                     "side": side_from_direction(direction=direction * -1),
                     "positionSide": "BOTH",
                     "type": "TRAILING_STOP_MARKET",
-                    "activationPrice": price,
-                    "quantity": qty,
+                    "activationPrice": str(sl_limit),
+                    "quantity": str(-qty),
                     "reduceOnly": "true",
-                    "callbackRate": sl,
+                    "callbackRate": str(sl),
                     "workingType": "MARK_PRICE",
                 }
             else:
@@ -199,26 +206,31 @@ class BinanceFutures(ExchangeInterface):
                     "symbol": symbol,
                     "side": side_from_direction(direction=direction * -1),
                     "positionSide": "BOTH",
-                    "type": "STOP_MARKET",
-                    "quantity": qty,
-                    "stopPrice": sl,
+                    "type": "STOP",
+                    "quantity": str(-qty),
+                    "price": str(sl_limit),
+                    "stopPrice": str(sl),
                     "closePosition": "true",
                     "workingType": "MARK_PRICE",
                 }
         # Take profit arguments
         if tp is not None:
+            # Activation price for limits: middle between price and limit
+            tp_limit = (price + tp) / 2
+            # Args
             tp_kwargs = {
                 "symbol": symbol,
                 "side": side_from_direction(direction=direction * -1),
                 "positionSide": "BOTH",
-                "type": "TAKE_PROFIT_MARKET",
-                "quantity": qty,
+                "type": "TAKE_PROFIT",
+                "quantity": str(qty),
+                "price": str(tp_limit),
                 "stopPrice": str(tp),
                 "closePosition": "true",
                 "workingType": "MARK_PRICE",
             }
         # Place the trades
-        executed_trades = []
+        executed_trades: list[int] = []
         try:
             # Close all previous open positions for that symbol
             self.client.cancel_open_orders(symbol=symbol)
@@ -227,7 +239,7 @@ class BinanceFutures(ExchangeInterface):
             if not order_response.get("orderId"):
                 # Order not placed
                 raise Exception(order_response)
-            executed_trades.append(order_response["orderId"])
+            executed_trades.append(int(order_response["orderId"]))
             # Place the SL
             sl_response = self.client.new_order(**sl_kwargs)
             if not sl_response.get("orderId"):
@@ -254,8 +266,11 @@ class BinanceFutures(ExchangeInterface):
         except Exception as error:
             error_data = error
         # Close all active positions for that symbol
-        for t in executed_trades:
-            self.client.cancel_order(symbol=symbol, orderId=t)
+        try:
+            for t in executed_trades:
+                self.client.cancel_order(symbol=symbol, orderId=t)
+        except ClientError as error:
+            error_data = {"code": error.error_code, "msg": error.error_message}
         # Return error message
         return "{icon} {error} {message}".format(
             icon=I.CROSS,

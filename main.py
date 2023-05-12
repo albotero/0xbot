@@ -4,7 +4,7 @@ import os
 from scripts.exchanges.binance_futures import BinanceFutures
 from scripts.exchanges.binance_spot import BinanceSpot
 from scripts.console import C, I
-from scripts.strategies.technical_analysis import technical_analysis
+from scripts.strategies.examples import *
 
 settings_path = "bot-config.json"
 
@@ -61,7 +61,8 @@ def main():
             return
         if bn.account:
             if bn.account["canTrade"]:
-                technical_analysis(exchange=bn, market=settings["market"])
+                # example_technical_analysis(exchange=bn, market=settings["market"])
+                example_divergences(exchange=bn, market=settings["market"])
 
 
 if __name__ == "__main__":

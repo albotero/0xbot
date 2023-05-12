@@ -19,9 +19,14 @@ class Direction:
 class Indicator:
     """Defines which function to use to analyze data
 
-    :parameter indicator_type: constant Indicator.TYPE_...
-    :parameter timeframe: string
-    :parameter kwargs: optional dictionary with parameters for the specific indicator function"""
+    Parameters
+    ----------
+
+    `indicator_type`: constant Indicator.TYPE_...
+
+    `timeframe`: string
+
+    `kwargs`: optional dictionary with parameters for the specific indicator function"""
 
     TYPE_MACD = "MACD"
     TYPE_RSI = "RSI"
@@ -52,7 +57,9 @@ class Indicator:
     def analyze_data(self, data: DataFrame) -> "str | list[str]":
         """Execute analysis funciton
 
-        Returns header(s) of the resulting data in the DataFrame"""
+        Returns
+        -------
+        Header(s) of the resulting data in the DataFrame"""
         f = self.functions[self.indicator_type]
         if self.function_kwargs:
             return f(data, **self.function_kwargs)
@@ -73,8 +80,8 @@ class Signal:
         *,
         signal_ind: "Indicator | None",
         signal_header: str,
-        buy_limit: float = 0.0,
-        sell_limit: float = 0.0,
+        buy_limit: float | None = None,
+        sell_limit: float | None = None,
         base_ind: "Indicator | float | None" = None,
         base_header: str = None,
         reverse: bool = False,

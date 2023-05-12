@@ -187,12 +187,17 @@ class BinanceSpot(ExchangeInterface):
 
         Parameters
         ----------
-        symbol: pair to trade (e.g. "BTCBUSD")
-        direction: Direction of the trade
-        qty: amount of the trade
-        price: price for the limit order
-        sl: stop loss price
-        tl: take profit price
+        `symbol`: pair to trade (e.g. "BTCBUSD")
+
+        `direction`: Direction of the trade
+
+        `qty`: amount of the trade
+
+        `price`: price for the limit order
+
+        `sl`: stop loss price
+
+        `tl`: take profit price
 
         Returns
         -------

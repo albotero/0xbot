@@ -6,20 +6,29 @@ from scripts.exchanges.exchange import ExchangeInterface
 from scripts.indicators.indicator import Direction, Indicator, Signal
 import time
 
+from scripts.indicators.trend.divergence import DivergenceSignal
+
 
 class SpotStrategy:
     """Open long/short positions with SL/TP
 
     Parameters
     ----------
-    name: name to identify the strategy on command line
-    exchange: exchange interface
-    signals: list of Signal objects with the desired Indicators
-    order_value: percentage of balance for each trade (0 to 100)
-    risk_reward_ind: percentage for stop loss (0 to 100) or Indicator (e.g. ATR)
-    risk_reward_ratio: reward expected for the risk
-    timeframe: candlesticks timeframe
-    min_signals_percentage: percentage of signals to place an order"""
+    `name`: name to identify the strategy on command line
+
+    `exchange`: exchange interface
+
+    `signals`: list of Signal objects with the desired Indicators
+
+    `order_value`: percentage of balance for each trade (0 to 100)
+
+    `risk_reward_ind`: percentage for stop loss (0 to 100) or Indicator (e.g. ATR)
+
+    `risk_reward_ratio`: reward expected for the risk
+
+    `timeframe`: candlesticks timeframe
+
+    `min_signals_percentage`: percentage of signals to place an order"""
 
     def __init__(
         self,
@@ -28,7 +37,7 @@ class SpotStrategy:
         order_value: float,
         risk_reward_ind: "float | Indicator",
         risk_reward_ratio: float,
-        signals: list[Signal],
+        signals: "list[Signal | DivergenceSignal]",
         timeframe: str,
         min_signals_percentage: float = 0.75,
     ) -> None:
