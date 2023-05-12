@@ -31,18 +31,18 @@ class DivergenceSignal:
         price_hl = self.hl(price_data)
         # Bearish divergence
         if price_hl["higher_highs"] and indicator_hl["lower_highs"]:
-            return Direction.BEARISH
+            return Direction.BEARISH, "Bearish divergence"
         # Bullish divergence
         if price_hl["lower_lows"] and indicator_hl["higher_lows"]:
-            return Direction.BULLISH
+            return Direction.BULLISH, "Bullish divergence"
         # Bearish hidden divergence
         if price_hl["lower_highs"] and indicator_hl["higher_highs"]:
-            return Direction.BEARISH
+            return Direction.BEARISH, "Bearish hidden divergence"
         # Bullish hidden divergence
         if price_hl["higher_lows"] and indicator_hl["lower_lows"]:
-            return Direction.BULLISH
+            return Direction.BULLISH, "Bullish hidden divergence"
         # No divergence found
-        return Direction.NEUTRAL
+        return Direction.NEUTRAL, ""
 
     def hl(self, series: Series) -> dict[str:bool]:
         """Analyze series for 2+ consecutive highs and lows
@@ -55,34 +55,15 @@ class DivergenceSignal:
         -------
         >>> dict:
         {"higher_highs": bool, "higher_lows": bool, "lower_highs": bool, "lower_lows": bool}"""
-        # Initialize variables
-        hh = hl = lh = ll = True
-        # Get highs filtered by 5 periods
+        # Get highs and lows filtered by 5 periods
         highs = argrelextrema(series.values, np.greater, order=5)[0]
-        #
-        # Iterate through highs
-        # ------------------------
-        # If any value is False, no need to further analysis
-        for h in range(1, len(highs)):
-            # If any high is lesser than the previous one, doesn't have higher highs
-            if hh and highs[h] < highs[h - 1]:
-                hh = False
-            # In any high is greater than the previous one, doesn't have lower highs
-            if lh and highs[h] > highs[h - 1]:
-                lh = False
-        # Get lows filtered by 5 periods
         lows = argrelextrema(series.values, np.less, order=5)[0]
-        #
-        # Iterate through lows.
-        # ------------------------
-        # If any value is False, no need to further analysis
-        for l in range(1, len(lows)):
-            # If any low is lesser than the previous one, doesn't have higher lows
-            if hl and lows[l] < lows[l - 1]:
-                hl = False
-            # In any low is greater than the previous one, doesn't have lower lows
-            if ll and lows[l] > lows[l - 1]:
-                ll = False
+        # If last value is the highest of the series, it has higher highs/lows
+        hh = highs[-1] == highs.max()
+        hl = lows[-1] == lows.max()
+        # If last value is the lowest of the series, it has lower highs/lows
+        lh = highs[-1] == highs.min()
+        ll = lows[-1] == lows.min()
         # Return data
         return {
             "higher_highs": hh,
