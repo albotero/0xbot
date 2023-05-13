@@ -202,8 +202,8 @@ class BinanceFutures(ExchangeInterface):
                 "positionSide": "BOTH",
                 "type": "STOP",
                 "quantity": qty,
-                "price": round_float_to_str(number=(price + sl) / 2, decimal_places=tick_size),
-                "stopPrice": round_float_to_str(number=sl, decimal_places=tick_size),
+                "stopPrice": round_float_to_str(number=(price + sl) / 2, decimal_places=tick_size),  # Trigger
+                "price": round_float_to_str(number=sl, decimal_places=tick_size),  # SL
                 "reduceOnly": "true",
                 "workingType": "MARK_PRICE",
             }
@@ -233,8 +233,8 @@ class BinanceFutures(ExchangeInterface):
                     "positionSide": "BOTH",
                     "type": "TAKE_PROFIT",
                     "quantity": qty,
-                    "price": round_float_to_str(number=(price + tp) / 2, decimal_places=tick_size),
-                    "stopPrice": round_float_to_str(number=tp, decimal_places=tick_size),
+                    "stopPrice": round_float_to_str(number=(price + tp) / 2, decimal_places=tick_size),  # Trigger
+                    "price": round_float_to_str(number=tp, decimal_places=tick_size),  # TP
                     "reduceOnly": "true",
                     "workingType": "MARK_PRICE",
                 }

@@ -226,8 +226,8 @@ class BinanceSpot(ExchangeInterface):
                 "type": "STOP_LOSS_LIMIT",
                 "timeInForce": "GTC",
                 "quantity": qty,
-                "price": round_float_to_str(number=(price + sl) / 2, decimal_places=tick_size),
-                "stopPrice": round_float_to_str(number=sl, decimal_places=tick_size),
+                "stopPrice": round_float_to_str(number=(price + sl) / 2, decimal_places=tick_size),  # Trigger
+                "price": round_float_to_str(number=sl, decimal_places=tick_size),  # SL
             }
         # Take profit arguments
         if tp is not None:
@@ -238,8 +238,8 @@ class BinanceSpot(ExchangeInterface):
                 "type": "TAKE_PROFIT_LIMIT",
                 "timeInForce": "GTC",
                 "quantity": qty,
-                "price": round_float_to_str(number=(price + tp) / 2, decimal_places=tick_size),
-                "stopPrice": round_float_to_str(number=tp, decimal_places=tick_size),
+                "stopPrice": round_float_to_str(number=(price + tp) / 2, decimal_places=tick_size),  # Trigger
+                "price": round_float_to_str(number=tp, decimal_places=tick_size),  # TP
             }
         # Place the trades
         order_id: int = 0
