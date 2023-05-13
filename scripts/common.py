@@ -8,10 +8,20 @@ def readable_time(time):
     return to_datetime(time, unit="ms", utc=True).map(lambda x: x.tz_convert("America/Bogota"))
 
 
-def round_float(number: float, decimal_places: int) -> float:
-    """Rounds a safe float number to desired decimal places"""
-    base_decimal = 10**decimal_places
-    return int(number * base_decimal) / base_decimal
+def round_float_to_str(number: float, decimal_places: int, signed: bool = False) -> str:
+    """Rounds a float number to a string with desired decimal places"""
+    return f"{number:+.{decimal_places}f}" if signed else f"{number:.{decimal_places}f}"
+
+
+def str_to_decimal_places(value: str) -> int:
+    """Gets number of decimal places from a string number"""
+    values = value.split(".")
+    if len(values) == 2:
+        # Has decimal places
+        return values[1].find("1") + 1
+    else:
+        # It's an integer!
+        return 0
 
 
 def determine_percent_rise(open: float, close: float) -> float:

@@ -2,7 +2,7 @@ from binance.error import ClientError
 from binance.um_futures import UMFutures
 from pandas import DataFrame
 
-from scripts.common import readable_time, side_from_direction
+from scripts.common import readable_time, round_float_to_str, side_from_direction, str_to_decimal_places
 from scripts.console import C, I
 from scripts.exchanges.exchange import ExchangeInterface
 from scripts.indicators.indicator import Direction
@@ -34,7 +34,7 @@ class BinanceFutures(ExchangeInterface):
     def query_quote_asset_list(self):
         """Retrieve quotes of crypto against Quote"""
         # Update console
-        print(C.Style(f"{I.CLOCK} Receiving assets data ...", C.DARKCYAN), end="")
+        print(C.Style(f"{I.CLOCK} Receiving assets data ... ", C.DARKCYAN), end="")
         # Retrieve data
         symbol_dictionary = self.client.exchange_info()
         # Convert into a dataframe
@@ -50,7 +50,6 @@ class BinanceFutures(ExchangeInterface):
             data = {
                 "base": row["baseAsset"],
                 "quote": row["quoteAsset"],
-                "precision": row["baseAssetPrecision"],
             }
             for filter in row["filters"]:
                 if filter["filterType"] == "LOT_SIZE":
@@ -72,6 +71,9 @@ class BinanceFutures(ExchangeInterface):
 
     def update_account_data(self) -> None:
         """Retrieves updated data from Binance Futures account"""
+        # Update console
+        print(C.Style(f"{I.CLOCK} Updating account data ... ", C.DARKCYAN), end="")
+        # Update account
         data = self.client.account()
         # Account Balances
         for asset in data["assets"]:
@@ -96,6 +98,7 @@ class BinanceFutures(ExchangeInterface):
                     "entryPrice": float(p["entryPrice"]),
                     "markPrice": float(mark_prices.get(p["symbol"], 0.0)),
                 }
+        print("\r{:<80}".format(""), end="\r")
 
     def get_candlestick_data(self, _symbol, _timeframe, _qty):
         """Query Binance for candlestick data"""
@@ -138,7 +141,7 @@ class BinanceFutures(ExchangeInterface):
     def create_order(
         self,
         symbol: str,
-        direction: Direction,
+        direction: int,
         qty: float,
         price: float,
         trailing: bool = True,
@@ -171,51 +174,56 @@ class BinanceFutures(ExchangeInterface):
         Order IDs if successful or error message"""
         # Set leverage
         self.client.change_leverage(symbol=symbol, leverage=leverage)
+        # Filters
+        step_size = str_to_decimal_places(self.symbols[symbol]["step_size"])
+        tick_size = str_to_decimal_places(self.symbols[symbol]["tick_size"])
+        qty = round_float_to_str(
+            number=min(max(qty, self.symbols[symbol]["min_qty"]), self.symbols[symbol]["max_qty"]),
+            decimal_places=step_size,
+        )
         # Main order arguments
+        ## Type MARKET so SL and TP can be ordered rightaway
         order_kwargs = {
             "symbol": symbol,
             "side": side_from_direction(direction=direction),
             "positionSide": "BOTH",
-            "type": "LIMIT",
-            "timeInForce": "GTC",
-            "quantity": str(qty),
-            "price": str(price),
+            "type": "MARKET",
+            "quantity": qty,
             "reduceOnly": "false",
         }
         # Change direction for SL and TP
         direction *= -1
         # Stop loss arguments
         if sl is not None:
-            # Trailing SL: 0.1% ≤ Callback rate ≤ 5%
-            sl = min(max(sl, 0.1), 5) if trailing else sl
-            # Activation price for limits: middle between price and limit
-            sl_limit = (price + sl) / 2
             # Args
             sl_kwargs = {
                 "symbol": symbol,
                 "side": side_from_direction(direction=direction),
                 "positionSide": "BOTH",
                 "type": "STOP",
-                "price": str(sl_limit),
-                "stopPrice": str(sl),
-                "closePosition": "true",
+                "quantity": qty,
+                "price": round_float_to_str(number=(price + sl) / 2, decimal_places=tick_size),
+                "stopPrice": round_float_to_str(number=sl, decimal_places=tick_size),
+                "reduceOnly": "true",
                 "workingType": "MARK_PRICE",
             }
         # Take profit arguments
         if tp is not None:
-            # Activation price for limits: middle between price and limit
-            tp_limit = (price + tp) / 2
             # Args
             if trailing:
-                sl_kwargs = {
+                cr = min(max(tp, 0.1), 20)
+                tp_kwargs = {
                     "symbol": symbol,
                     "side": side_from_direction(direction=direction),
                     "positionSide": "BOTH",
                     "type": "TRAILING_STOP_MARKET",
-                    "activationPrice": str(tp_limit),
-                    "quantity": str(qty),
+                    "activationPrice": round_float_to_str(
+                        number=price - price * cr * direction / 100,
+                        decimal_places=tick_size,
+                    ),
+                    "quantity": qty,
                     "reduceOnly": "true",
-                    "callbackRate": str(tp),
+                    "callbackRate": round_float_to_str(number=cr, decimal_places=1),
                     "workingType": "MARK_PRICE",
                 }
             else:
@@ -224,13 +232,14 @@ class BinanceFutures(ExchangeInterface):
                     "side": side_from_direction(direction=direction),
                     "positionSide": "BOTH",
                     "type": "TAKE_PROFIT",
-                    "price": str(tp_limit),
-                    "stopPrice": str(tp),
-                    "closePosition": "true",
+                    "quantity": qty,
+                    "price": round_float_to_str(number=(price + tp) / 2, decimal_places=tick_size),
+                    "stopPrice": round_float_to_str(number=tp, decimal_places=tick_size),
+                    "reduceOnly": "true",
                     "workingType": "MARK_PRICE",
                 }
         # Place the trades
-        executed_trades: list[int] = []
+        order_id: int = 0
         try:
             # Close all previous open positions for that symbol
             self.client.cancel_open_orders(symbol=symbol)
@@ -238,20 +247,18 @@ class BinanceFutures(ExchangeInterface):
             order_response = self.client.new_order(**order_kwargs)
             if not order_response.get("orderId"):
                 # Order not placed
-                raise Exception(order_response)
-            executed_trades.append(int(order_response["orderId"]))
+                raise Exception(order_kwargs)
+            order_id = int(order_response["orderId"])
             # Place the SL
             sl_response = self.client.new_order(**sl_kwargs)
             if not sl_response.get("orderId"):
                 # Order not placed
-                raise Exception(sl_response)
-            executed_trades.append(sl_response["orderId"])
+                raise Exception(sl_kwargs)
             # Place the TP
             tp_response = self.client.new_order(**tp_kwargs)
             if not tp_response.get("orderId"):
                 # Order not placed
-                raise Exception(tp_response)
-            executed_trades.append(tp_response["orderId"])
+                raise Exception(tp_kwargs)
             # Success... Return responses
             return "Order ID: {order} {separator} SL ID: {sl} {separator} TP ID: {tp}".format(
                 separator=C.Style(" | ", C.DARKCYAN),
@@ -265,15 +272,29 @@ class BinanceFutures(ExchangeInterface):
             error_data = {"code": error.error_code, "msg": error.error_message}
         except Exception as error:
             error_data = error
-        # Close all active positions for that symbol
+        # Close all open orders for that symbol
+        cancel_error = ""
         try:
-            for t in executed_trades:
-                self.client.cancel_order(symbol=symbol, orderId=t)
+            self.client.cancel_open_orders(symbol=symbol)
         except ClientError as error:
-            error_data = {"code": error.error_code, "msg": error.error_message}
+            cancel_error += "\n    {icon} {error} {message}".format(
+                icon=I.CROSS,
+                error=C.Style("CANCEL ERROR", C.RED, C.BOLD),
+                message=C.Style("[{}] {}".format(error.error_code, error.error_message), C.RED),
+            )
+        # Close the executed order
+        if order_id:
+            try:
+                self.client.cancel_order(symbol=symbol, orderId=order_id)
+            except ClientError as error:
+                cancel_error += "\n    {icon} {error} {message}".format(
+                    icon=I.CROSS,
+                    error=C.Style("CANCEL ERROR", C.RED, C.BOLD),
+                    message=C.Style("[{}] {}".format(error.error_code, error.error_message), C.RED),
+                )
         # Return error message
         return "{icon} {error} {message}".format(
             icon=I.CROSS,
-            error=C.Style("ERROR", C.RED, C.BOLD),
-            message=C.Style("[{}] {}".format(error_data["code"], error_data["msg"]), C.RED),
+            error=C.Style("ORDER ERROR", C.RED, C.BOLD),
+            message=C.Style("[{}] {}".format(error_data["code"], error_data["msg"]), C.RED) + cancel_error,
         )

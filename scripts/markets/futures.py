@@ -1,7 +1,7 @@
 from datetime import datetime
 import time
 from tabulate import tabulate
-from scripts.common import round_float, seconds_till_next_close
+from scripts.common import round_float_to_str, seconds_till_next_close
 from scripts.console import C, I, progress_bar
 from scripts.exchanges.exchange import ExchangeInterface
 from scripts.indicators.indicator import Indicator, Signal, Direction
@@ -148,6 +148,7 @@ class FuturesStrategy:
             candles = self.exchange.candlesticks[f"{symbol}-{self.timeframe}"]
             self.risk_reward_ind.analyze_data(candles)
             rr = candles.iloc[-1]["atr({})".format(self.risk_reward_ind.function_kwargs["periods"])]
+            rr = max(rr, mark_price * 1 / 100)
         else:
             # Risk Reward Indicator is a float with % of RR
             rr = mark_price * self.risk_reward_ind / 100
@@ -160,22 +161,13 @@ class FuturesStrategy:
         # Define order value
         percentage = self.order_value / 100
         val = self.exchange.account["crossWalletBalance"] * percentage * self.leverage / mark_price
-        # Filter compliance
-        filters = self.exchange.symbols[symbol]
-        step = filters["step_size"].find("1") - 1
-        val = round_float(number=val, decimal_places=step)
-        val = min(max(val, filters["min_qty"]), filters["max_qty"])
-        tick = filters["tick_size"].find("1") - 1
-        mark_price = round_float(number=mark_price, decimal_places=tick)
-        sl = round_float(number=sl, decimal_places=tick)
-        tp = round_float(number=tp, decimal_places=tick)
         # Place the order
         return self.exchange.create_order(
             symbol=symbol,
             direction=direction,
             qty=val,
             price=mark_price,
-            trailing_sl=self.trailing_stop,
+            trailing=self.trailing_stop,
             sl=sl,
             tp=tp,
             leverage=self.leverage,
@@ -194,20 +186,37 @@ class FuturesStrategy:
             order_type = C.Style("Long", C.GREEN) if pos_amount > 0 else C.Style("Short", C.RED)
             amount = f"{abs(pos_amount)} {symbol.replace(self.exchange.quote_asset, '')}"
             entry = "{:.9g}".format(orders["entryPrice"])
+            entry_value = abs(pos_amount) * orders["entryPrice"]
+            entry_value = f"{round_float_to_str(number=entry_value, decimal_places=4)} {self.exchange.quote_asset}"
             mark = "{:.9g}".format(orders["markPrice"])
-            un_pnl = round_float(number=orders["unrealizedProfit"], decimal_places=4)
+            mark_value = abs(pos_amount) * orders["markPrice"]
+            mark_value = f"{round_float_to_str(number=mark_value, decimal_places=4)} {self.exchange.quote_asset}"
+            un_pnl = orders["unrealizedProfit"]
             un_pnl = C.Style(
-                f"{un_pnl:+} {self.exchange.quote_asset}",
+                f"{round_float_to_str(number=un_pnl, decimal_places=4, signed=True):>10} {self.exchange.quote_asset}",
                 C.RED if un_pnl < 0 else C.GREEN,
             )
             # Append to printable list
-            _positions.append([C.Style(symbol, C.DARKCYAN), order_type, amount, entry, mark, un_pnl])
+            _positions.append(
+                [
+                    C.Style(symbol, C.DARKCYAN),
+                    order_type,
+                    amount,
+                    entry,
+                    entry_value,
+                    mark,
+                    mark_value,
+                    un_pnl,
+                ]
+            )
         # Wallet Balance
-        total_balance = round_float(number=self.exchange.account["crossWalletBalance"], decimal_places=4)
-        unrealized_profit = round_float(number=self.exchange.account["crossUnPnl"], decimal_places=4)
-        available_balance = round_float(number=self.exchange.account["availableBalance"], decimal_places=4)
+        total_balance = round_float_to_str(number=self.exchange.account["crossWalletBalance"], decimal_places=4)
+        unrealized_profit = round_float_to_str(
+            number=self.exchange.account["crossUnPnl"], decimal_places=4, signed=True
+        )
+        available_balance = round_float_to_str(number=self.exchange.account["availableBalance"], decimal_places=4)
         # Clear line
-        print(f"\r{'':<80}\r", end="")
+        print(f"\r{'':<80}", end="\r")
         # Print data
         if len(_positions):
             print(
@@ -221,7 +230,9 @@ class FuturesStrategy:
                         " Side",
                         " Amount",
                         " Entry price",
+                        " Initial value",
                         " Mark price",
+                        " Current value",
                         " Unrealized PNL",
                     ],
                 ),
@@ -233,10 +244,9 @@ class FuturesStrategy:
         )
         print(
             f"{I.PROFIT} Unrealized Profit:",
-            C.Style(f"{unrealized_profit:+} {self.exchange.quote_asset}", C.CYAN),
+            C.Style(f"{unrealized_profit} {self.exchange.quote_asset}", C.CYAN),
         )
         print(
             f"{I.PROFIT} Available Balance:",
             C.Style(f"{available_balance} {self.exchange.quote_asset}", C.CYAN),
         )
-        print()

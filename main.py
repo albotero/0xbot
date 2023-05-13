@@ -5,7 +5,7 @@ from typing import Any
 from scripts.exchanges.binance_futures import BinanceFutures
 from scripts.exchanges.binance_spot import BinanceSpot
 from scripts.console import C, I
-from scripts.strategies.examples import *
+from scripts.examples import divergences_example, technical_analysis_example
 
 settings_path = "bot-config.json"
 
@@ -46,8 +46,8 @@ def select_strategy() -> "tuple[str | Any]":
     """Select one of the defined strategies to run"""
     # Implement strategies
     strategies = [
-        ("Technical Analysis Example", example_technical_analysis),
-        ("Divergences Example", example_divergences),
+        ("Technical Analysis Example", technical_analysis_example.strategy),
+        ("Divergences Example", divergences_example.strategy),
     ]
     # No strategies in the list
     if len(strategies) == 0:
@@ -61,9 +61,9 @@ def select_strategy() -> "tuple[str | Any]":
                 print()
                 print("You have multiple strategies defined:")
                 for n, strategy in enumerate(strategies):
-                    print(C.Style(f"  [{n}] {strategy[0]}", C.DARKCYAN))
+                    print(C.Style(f"  [{n+1}] {strategy[0]}", C.DARKCYAN))
                 strategy_index = int(input("Which strategy would you like to use? Only text its number: "))
-                if strategy_index >= len(strategies):
+                if strategy_index < 1 or strategy_index > len(strategies):
                     raise ValueError
                 loop = False
                 print()
@@ -74,7 +74,7 @@ def select_strategy() -> "tuple[str | Any]":
                     C.Style("Invalid strategy number", C.RED),
                 )
     # Return selected or default tuple
-    return strategies[strategy_index]
+    return strategies[strategy_index - 1]
 
 
 def main():

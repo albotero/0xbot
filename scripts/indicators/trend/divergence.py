@@ -56,14 +56,21 @@ class DivergenceSignal:
         >>> dict:
         {"higher_highs": bool, "higher_lows": bool, "lower_highs": bool, "lower_lows": bool}"""
         # Get highs and lows filtered by 5 periods
-        highs = argrelextrema(series.values, np.greater, order=5)[0]
-        lows = argrelextrema(series.values, np.less, order=5)[0]
+        array = series.to_numpy(dtype=float)
+        high_indices = argrelextrema(array, np.greater, order=5)[0]
+        low_indices = argrelextrema(array, np.less, order=5)[0]
+        highs = [array[h] for h in high_indices]
+        lows = [array[l] for l in low_indices]
+        # Initialize variables
+        hh = lh = hl = ll = False
         # If last value is the highest of the series, it has higher highs/lows
-        hh = highs[-1] == highs.max()
-        hl = lows[-1] == lows.max()
         # If last value is the lowest of the series, it has lower highs/lows
-        lh = highs[-1] == highs.min()
-        ll = lows[-1] == lows.min()
+        if len(highs):
+            hh = highs[-1] == max(highs)
+            lh = highs[-1] == min(highs)
+        if len(lows):
+            hl = lows[-1] == max(lows)
+            ll = lows[-1] == min(lows)
         # Return data
         return {
             "higher_highs": hh,

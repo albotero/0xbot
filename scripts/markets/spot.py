@@ -1,6 +1,6 @@
 from datetime import datetime
 from tabulate import tabulate
-from scripts.common import round_float, seconds_till_next_close
+from scripts.common import round_float_to_str, seconds_till_next_close
 from scripts.console import *
 from scripts.exchanges.exchange import ExchangeInterface
 from scripts.indicators.indicator import Direction, Indicator, Signal
@@ -149,15 +149,6 @@ class SpotStrategy:
         # Define order value
         percentage = self.order_value / 100
         val = self.calc_total_wallet_balance() * percentage / mark_price
-        # Filter compliance
-        filters = self.exchange.symbols[symbol]
-        step = filters["step_size"].find("1") - 1
-        val = round_float(number=val, decimal_places=step)
-        val = min(max(val, filters["min_qty"]), filters["max_qty"])
-        tick = filters["tick_size"].find("1") - 1
-        mark_price = round_float(number=mark_price, decimal_places=tick)
-        sl = round_float(number=sl, decimal_places=tick)
-        tp = round_float(number=tp, decimal_places=tick)
         # Place the order
         return self.exchange.create_order(
             symbol=symbol,
@@ -205,18 +196,43 @@ class SpotStrategy:
             side = C.Style(position["side"], C.GREEN if position["side"] == "BUY" else C.RED)
             amount = f"{abs(pos_amount)} {asset}"
             entry = "{:.9g}".format(position["entryPrice"])
-            mark = "{:.9g}".format(self.exchange.balance[asset]["markPrice"])
-            un_pnl = round_float(number=position["unrealizedProfit"], decimal_places=4)
+            entry_value = abs(pos_amount) * position["entryPrice"]
+            entry_value = f"{round_float_to_str(number=entry_value, decimal_places=4)} {self.exchange.quote_asset}"
+            mark = "{:.9g}".format(position["markPrice"])
+            mark_value = abs(pos_amount) * position["markPrice"]
+            mark_value = f"{round_float_to_str(number=mark_value, decimal_places=4)} {self.exchange.quote_asset}"
+            un_pnl = position["unrealizedProfit"]
             unrealized_profit += un_pnl
-            un_pnl = C.Style(f"{un_pnl:+} {self.exchange.quote_asset}", C.RED if un_pnl < 0 else C.GREEN)
+            un_pnl = C.Style(
+                f"{round_float_to_str(number=un_pnl,decimal_places=4,signed=True):>10} {self.exchange.quote_asset}",
+                C.RED if un_pnl < 0 else C.GREEN,
+            )
             # Append to printable list
-            _positions.append([C.Style(symbol, C.DARKCYAN), side, position["type"], amount, entry, mark, un_pnl])
+            _positions.append(
+                [
+                    C.Style(symbol, C.DARKCYAN),
+                    side,
+                    position["type"],
+                    amount,
+                    entry,
+                    entry_value,
+                    mark,
+                    mark_value,
+                    un_pnl,
+                ]
+            )
         # Wallet Balance
-        total_balance = round_float(number=self.calc_total_wallet_balance(), decimal_places=4)
-        locked_balance = round_float(number=self.calc_total_wallet_balance(balance_type="locked"), decimal_places=4)
-        free_balance = round_float(number=self.calc_total_wallet_balance(balance_type="free"), decimal_places=4)
+        total_balance = round_float_to_str(number=self.calc_total_wallet_balance(), decimal_places=4)
+        locked_balance = round_float_to_str(
+            number=self.calc_total_wallet_balance(balance_type="locked"), decimal_places=4
+        )
+        free_balance = round_float_to_str(number=self.calc_total_wallet_balance(balance_type="free"), decimal_places=4)
+        unrealized_profit = C.Style(
+            f"{round_float_to_str(number=unrealized_profit,decimal_places=4,signed=True)} {self.exchange.quote_asset}",
+            C.RED if unrealized_profit < 0 else C.GREEN,
+        )
         # Clear line
-        print(f"\r{'':<80}\r", end="")
+        print(f"\r{'':<80}", end="\r")
         # Print data
         if len(_positions):
             print(
@@ -238,19 +254,18 @@ class SpotStrategy:
                 "\n",
             )
         print(
-            f"{I.PROFIT} Total {self.exchange.quote_asset} Equivalent Balance: ",
-            C.Style(f"{total_balance} {self.exchange.quote_asset}", C.CYAN),
+            f"{I.PROFIT} Unrealized Profit:",
+            C.Style(f"{unrealized_profit} {self.exchange.quote_asset}", C.CYAN),
         )
         print(
             f"{I.PROFIT} Locked {self.exchange.quote_asset} Equivalent Balance:",
             C.Style(f"{locked_balance} {self.exchange.quote_asset}", C.CYAN),
         )
         print(
-            f"{I.PROFIT} Unrealized Profit:        ",
-            C.Style(f"{unrealized_profit:+} {self.exchange.quote_asset}", C.CYAN),
-        )
-        print(
-            f"{I.PROFIT} Free {self.exchange.quote_asset} Equivalent Balance:  ",
+            f"{I.PROFIT} Free {self.exchange.quote_asset} Equivalent Balance:",
             C.Style(f"{free_balance} {self.exchange.quote_asset}", C.CYAN),
         )
-        print()
+        print(
+            f"{I.PROFIT} Total {self.exchange.quote_asset} Equivalent Balance:",
+            C.Style(f"{total_balance} {self.exchange.quote_asset}", C.CYAN),
+        )

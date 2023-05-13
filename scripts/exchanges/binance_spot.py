@@ -1,7 +1,7 @@
 from binance.error import ClientError
 from binance.spot import Spot
 from pandas import DataFrame
-from scripts.common import readable_time, side_from_direction
+from scripts.common import readable_time, round_float_to_str, side_from_direction, str_to_decimal_places
 from scripts.exchanges.exchange import ExchangeInterface
 from scripts.indicators.indicator import Direction
 from scripts.console import C, I
@@ -38,7 +38,7 @@ class BinanceSpot(ExchangeInterface):
     def query_quote_asset_list(self) -> None:
         """Retrieve quotes of crypto against Quote"""
         # Update console
-        print(C.Style(f"{I.CLOCK} Receiving assets data ...", C.DARKCYAN), end="")
+        print(C.Style(f"{I.CLOCK} Receiving assets data ... ", C.DARKCYAN), end="")
         # Retrieve data
         symbol_dictionary = self.client.exchange_info()
         # Convert into a dataframe
@@ -54,7 +54,6 @@ class BinanceSpot(ExchangeInterface):
             data = {
                 "base": row["baseAsset"],
                 "quote": row["quoteAsset"],
-                "precision": row["quoteAssetPrecision"],
             }
             for filter in row["filters"]:
                 # Market trades need to fill both LOT_SIZE and MARKET_LOT_SIZE
@@ -74,7 +73,7 @@ class BinanceSpot(ExchangeInterface):
     def update_account_data(self) -> None:
         """Retrieves updated data from Binance Futures account"""
         # Update console
-        print(C.Style(f"{I.CLOCK} Updating account data ...", C.DARKCYAN), end="")
+        print(C.Style(f"{I.CLOCK} Updating account data ... ", C.DARKCYAN), end="")
         # Update account
         self.account = self.client.account()
         # Assets balances
@@ -109,8 +108,7 @@ class BinanceSpot(ExchangeInterface):
                     "type": p["type"],
                     "entryPrice": entry_price,
                 }
-        # Update console
-        print(f"\r{I.CHECK} Account data updated{'':<20}")
+        print("\r{:<80}".format(""), end="\r")
 
     def sell_all_assets(self):
         for asset, p in self.balance.items():
@@ -202,44 +200,49 @@ class BinanceSpot(ExchangeInterface):
         Returns
         -------
         Order IDs if successful or error message"""
-        # Floats to Strings
-        qty = str(qty)
-        price = str(price)
+        # Filters
+        step_size = str_to_decimal_places(self.symbols[symbol]["step_size"])
+        tick_size = str_to_decimal_places(self.symbols[symbol]["tick_size"])
+        qty = round_float_to_str(
+            number=min(max(qty, self.symbols[symbol]["min_qty"]), self.symbols[symbol]["max_qty"]),
+            decimal_places=step_size,
+        )
         # Main order arguments
+        ## Type MARKET so SL and TP can be ordered rightaway
         order_kwargs = {
             "symbol": symbol,
             "side": side_from_direction(direction=direction),
-            "positionSide": "BOTH",
-            "type": "LIMIT",
-            "timeInForce": "GTC",
+            "type": "MARKET",
             "quantity": qty,
-            "price": price,
-            "reduceOnly": "false",
         }
+        # Change direction for SL and TP
+        direction *= -1
         # Stop loss arguments
         if sl is not None:
+            # Args
             sl_kwargs = {
                 "symbol": symbol,
-                "side": side_from_direction(direction=direction * -1),
-                "positionSide": "BOTH",
-                "type": "STOP_MARKET",
+                "side": side_from_direction(direction=direction),
+                "type": "STOP_LOSS_LIMIT",
+                "timeInForce": "GTC",
                 "quantity": qty,
-                "stopPrice": sl,
-                "workingType": "MARK_PRICE",
+                "price": round_float_to_str(number=(price + sl) / 2, decimal_places=tick_size),
+                "stopPrice": round_float_to_str(number=sl, decimal_places=tick_size),
             }
         # Take profit arguments
         if tp is not None:
+            # Args
             tp_kwargs = {
                 "symbol": symbol,
-                "side": side_from_direction(direction=direction * -1),
-                "positionSide": "BOTH",
-                "type": "TAKE_PROFIT_MARKET",
+                "side": side_from_direction(direction=direction),
+                "type": "TAKE_PROFIT_LIMIT",
+                "timeInForce": "GTC",
                 "quantity": qty,
-                "stopPrice": str(tp),
-                "workingType": "MARK_PRICE",
+                "price": round_float_to_str(number=(price + tp) / 2, decimal_places=tick_size),
+                "stopPrice": round_float_to_str(number=tp, decimal_places=tick_size),
             }
         # Place the trades
-        executed_trades = []
+        order_id: int = 0
         try:
             # Close all previous open positions for that symbol
             self.client.cancel_open_orders(symbol=symbol)
@@ -247,20 +250,18 @@ class BinanceSpot(ExchangeInterface):
             order_response = self.client.new_order(**order_kwargs)
             if not order_response.get("orderId"):
                 # Order not placed
-                raise Exception(order_response)
-            executed_trades.append(order_response["orderId"])
+                raise Exception(order_kwargs)
+            order_id = int(order_response["orderId"])
             # Place the SL
             sl_response = self.client.new_order(**sl_kwargs)
             if not sl_response.get("orderId"):
                 # Order not placed
-                raise Exception(sl_response)
-            executed_trades.append(sl_response["orderId"])
+                raise Exception(sl_kwargs)
             # Place the TP
             tp_response = self.client.new_order(**tp_kwargs)
             if not tp_response.get("orderId"):
                 # Order not placed
-                raise Exception(tp_response)
-            executed_trades.append(tp_response["orderId"])
+                raise Exception(tp_kwargs)
             # Success... Return responses
             return "Order ID: {order} {separator} SL ID: {sl} {separator} TP ID: {tp}".format(
                 separator=C.Style(" | ", C.DARKCYAN),
@@ -274,12 +275,29 @@ class BinanceSpot(ExchangeInterface):
             error_data = {"code": error.error_code, "msg": error.error_message}
         except Exception as error:
             error_data = error
-        # Close all active positions for that symbol
-        for t in executed_trades:
-            self.client.cancel_order(symbol=symbol, orderId=t)
+        # Close all open orders for that symbol
+        cancel_error = ""
+        try:
+            self.client.cancel_open_orders(symbol=symbol)
+        except ClientError as error:
+            cancel_error += "\n    {icon} {error} {message}".format(
+                icon=I.CROSS,
+                error=C.Style("CANCEL ERROR", C.RED, C.BOLD),
+                message=C.Style("[{}] {}".format(error.error_code, error.error_message), C.RED),
+            )
+        # Close the executed order
+        if order_id:
+            try:
+                self.client.cancel_order(symbol=symbol, orderId=order_id)
+            except ClientError as error:
+                cancel_error += "\n    {icon} {error} {message}".format(
+                    icon=I.CROSS,
+                    error=C.Style("CANCEL ERROR", C.RED, C.BOLD),
+                    message=C.Style("[{}] {}".format(error.error_code, error.error_message), C.RED),
+                )
         # Return error message
         return "{icon} {error} {message}".format(
             icon=I.CROSS,
-            error=C.Style("ERROR", C.RED, C.BOLD),
-            message=C.Style("[{}] {}".format(error_data["code"], error_data["msg"]), C.RED),
+            error=C.Style("ORDER ERROR", C.RED, C.BOLD),
+            message=C.Style("[{}] {}".format(error_data["code"], error_data["msg"]), C.RED) + cancel_error,
         )
