@@ -13,15 +13,17 @@ class C:
     def Style(text, *style, pad_left: int = 0, pad_center: int = 0, pad_right: int = 0) -> str:
         if pad_left:
             return "{style_start}{text:<{pad}}{style_end}".format(
-                style_start="".join(style), text=text, pad=pad_left, style_end=C.END)
+                style_start="".join(style), text=text, pad=pad_left, style_end=C.END
+            )
         if pad_center:
             return "{style_start}{text:^{pad}}{style_end}".format(
-                style_start="".join(style), text=text, pad=pad_center, style_end=C.END)
+                style_start="".join(style), text=text, pad=pad_center, style_end=C.END
+            )
         if pad_right:
             return "{style_start}{text:>{pad}}{style_end}".format(
-                style_start="".join(style), text=text, pad=pad_right, style_end=C.END)
-        return "{style_start}{text}{style_end}".format(
-            style_start="".join(style), text=text, style_end=C.END)
+                style_start="".join(style), text=text, pad=pad_right, style_end=C.END
+            )
+        return "{style_start}{text}{style_end}".format(style_start="".join(style), text=text, style_end=C.END)
 
 
 class I:
@@ -36,6 +38,6 @@ class I:
 
 
 def progress_bar(index, count, bar_length=30):
-    step = bar_length / count
+    step = int(bar_length / count)
     progress = index * step
-    return C.Style("\U00002588"*int(progress), C.GREEN) + C.Style("\U00002592"*int(bar_length-progress), C.CYAN)
+    return C.Style("\U00002588" * int(progress), C.GREEN) + C.Style("\U00002592" * int(bar_length - progress), C.CYAN)

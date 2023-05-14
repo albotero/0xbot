@@ -118,13 +118,12 @@ class FuturesStrategy:
             # Update screen
             descriptions = C.Style(" ** ", C.DARKCYAN).join(descriptions)
             if analysis:
-                analysis = "{}  {}  {:<30}\n".format(descriptions, C.Style("=>", C.DARKCYAN), analysis)
+                analysis = "{}  {}  {:<50}\n".format(descriptions, C.Style("=>", C.DARKCYAN), analysis)
                 print(
                     "\r ",
                     I.CLOCK,
                     C.Style(f"{symbol} ::", C.CYAN),
-                    f"{analysis:<50}",
-                    end="",
+                    analysis,
                 )
             else:
                 print(

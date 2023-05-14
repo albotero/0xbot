@@ -73,7 +73,7 @@ class BinanceSpot(ExchangeInterface):
     def update_account_data(self) -> None:
         """Retrieves updated data from Binance Futures account"""
         # Update console
-        print(C.Style(f"{I.CLOCK} Updating account data ... ", C.DARKCYAN), end="")
+        print(C.Style(f"\r{I.CLOCK} Updating account data ... ", C.DARKCYAN), end="")
         # Update account
         self.account = self.client.account()
         # Assets balances
@@ -175,11 +175,11 @@ class BinanceSpot(ExchangeInterface):
     def create_order(
         self,
         symbol: str,
-        direction: Direction,
+        direction: int,
         qty: float,
         price: float,
-        sl: float = None,
-        tp: float = None,
+        sl: "float | None" = None,
+        tp: "float | None" = None,
     ) -> str:
         """Creates an order on Binance and its SL and TP orders
 
@@ -191,15 +191,13 @@ class BinanceSpot(ExchangeInterface):
 
         `qty`: amount of the trade
 
-        `price`: price for the limit order
+        `price`: mark price of the asset
 
         `sl`: stop loss price
 
-        `tl`: take profit price
-
-        Returns
-        -------
-        Order IDs if successful or error message"""
+        `tl`: take profit price or callback rate if trailing"""
+        # Close all previous open positions for that symbol
+        self.client.cancel_open_orders(symbol=symbol)
         # Filters
         step_size = str_to_decimal_places(self.symbols[symbol]["step_size"])
         tick_size = str_to_decimal_places(self.symbols[symbol]["tick_size"])
@@ -215,10 +213,13 @@ class BinanceSpot(ExchangeInterface):
             "type": "MARKET",
             "quantity": qty,
         }
+        order_response = C.Style("Order: ", C.DARKCYAN) + self.place_order(
+            response_args=["origQty"], kwargs=order_kwargs
+        ).replace("origQty", "Qty")
         # Change direction for SL and TP
         direction *= -1
         # Stop loss arguments
-        if sl is not None:
+        if not I.CROSS in order_response and sl is not None:
             # Args
             sl_kwargs = {
                 "symbol": symbol,
@@ -229,8 +230,13 @@ class BinanceSpot(ExchangeInterface):
                 "stopPrice": round_float_to_str(number=(price + sl) / 2, decimal_places=tick_size),  # Trigger
                 "price": round_float_to_str(number=sl, decimal_places=tick_size),  # SL
             }
+            sl_response = C.Style("Stop Loss: ", C.DARKCYAN) + (
+                self.place_order(response_args=["price", "stopPrice"], kwargs=sl_kwargs)
+                .replace("price", "Activate")
+                .replace("stopPrice", "Limit")
+            )
         # Take profit arguments
-        if tp is not None:
+        if not I.CROSS in order_response and tp is not None:
             # Args
             tp_kwargs = {
                 "symbol": symbol,
@@ -241,63 +247,37 @@ class BinanceSpot(ExchangeInterface):
                 "stopPrice": round_float_to_str(number=(price + tp) / 2, decimal_places=tick_size),  # Trigger
                 "price": round_float_to_str(number=tp, decimal_places=tick_size),  # TP
             }
-        # Place the trades
-        order_id: int = 0
+            tp_response = C.Style("Take Profit: ", C.DARKCYAN) + (
+                self.place_order(response_args=["price", "stopPrice"], kwargs=tp_kwargs)
+                .replace("price", "Activate")
+                .replace("stopPrice", "Limit")
+            )
+        # Return responses
+        response = f"{order_response} - Mark price {price}"
+        if sl_response:
+            response += C.Style(" | ", C.DARKCYAN) + sl_response
+        if tp_response:
+            response += C.Style(" | ", C.DARKCYAN) + tp_response
+        return response
+
+    def place_order(self, response_args: list[str], kwargs) -> str:
         try:
-            # Close all previous open positions for that symbol
-            self.client.cancel_open_orders(symbol=symbol)
             # Place the order
-            order_response = self.client.new_order(**order_kwargs)
+            order_response = self.client.new_order(**kwargs)
             if not order_response.get("orderId"):
                 # Order not placed
-                raise Exception(order_kwargs)
-            order_id = int(order_response["orderId"])
-            # Place the SL
-            sl_response = self.client.new_order(**sl_kwargs)
-            if not sl_response.get("orderId"):
-                # Order not placed
-                raise Exception(sl_kwargs)
-            # Place the TP
-            tp_response = self.client.new_order(**tp_kwargs)
-            if not tp_response.get("orderId"):
-                # Order not placed
-                raise Exception(tp_kwargs)
+                raise Exception(kwargs)
             # Success... Return responses
-            return "Order ID: {order} {separator} SL ID: {sl} {separator} TP ID: {tp}".format(
-                separator=C.Style(" | ", C.DARKCYAN),
-                order=order_response["orderId"],
-                sl=sl_response["orderId"],
-                tp=tp_response["orderId"],
-            )
+            return " - ".join([f"{a} {order_response[a]}" for a in response_args])
         # ----------------------------------
         # An error ocurred...
         except ClientError as error:
             error_data = {"code": error.error_code, "msg": error.error_message}
         except Exception as error:
             error_data = error
-        # Close all open orders for that symbol
-        cancel_error = ""
-        try:
-            self.client.cancel_open_orders(symbol=symbol)
-        except ClientError as error:
-            cancel_error += "\n    {icon} {error} {message}".format(
-                icon=I.CROSS,
-                error=C.Style("CANCEL ERROR", C.RED, C.BOLD),
-                message=C.Style("[{}] {}".format(error.error_code, error.error_message), C.RED),
-            )
-        # Close the executed order
-        if order_id:
-            try:
-                self.client.cancel_order(symbol=symbol, orderId=order_id)
-            except ClientError as error:
-                cancel_error += "\n    {icon} {error} {message}".format(
-                    icon=I.CROSS,
-                    error=C.Style("CANCEL ERROR", C.RED, C.BOLD),
-                    message=C.Style("[{}] {}".format(error.error_code, error.error_message), C.RED),
-                )
         # Return error message
-        return "{icon} {error} {message}".format(
+        return "{icon} {message} -> {args}".format(
             icon=I.CROSS,
-            error=C.Style("ORDER ERROR", C.RED, C.BOLD),
-            message=C.Style("[{}] {}".format(error_data["code"], error_data["msg"]), C.RED) + cancel_error,
+            message=C.Style("[{}] {}".format(error_data["code"], error_data["msg"]), C.RED),
+            args=kwargs,
         )

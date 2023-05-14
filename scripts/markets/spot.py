@@ -129,6 +129,7 @@ class SpotStrategy:
             # Update waiting
             analyzed_index += 1
         # Update account data from Exchange
+        print()
         self.exchange.update_account_data()
 
     def place_order(self, symbol: str, mark_price: float, direction: int) -> str:
