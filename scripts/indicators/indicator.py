@@ -100,7 +100,10 @@ class Signal:
         signal_price = self.signal_header == "close"
         # Update signal data
         if signal_price:
-            self.buy_limit = self.sell_limit = data.iloc[-1]["close"]
+            # Analyze base indicator
+            self.base_ind.analyze_data(data)
+            # Buy if price is greater than ema (trend), sell otherwise
+            self.buy_limit = self.sell_limit = data.iloc[-1][self.base_header]
         else:
             self.signal_ind.analyze_data(data)
         current_signal = data.iloc[-1][self.signal_header].item()

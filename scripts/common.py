@@ -39,9 +39,9 @@ def timeframe_to_seconds(timeframe: str) -> float:
         return base * 60
     elif time_unit == "h":
         return base * 60 * 60
-    elif time_unit == "D":
+    elif time_unit == "d":
         return base * 60 * 60 * 24
-    elif time_unit == "W":
+    elif time_unit == "w":
         return base * 60 * 60 * 24 * 7
     elif time_unit == "M":
         return base * 60 * 60 * 24 * 30

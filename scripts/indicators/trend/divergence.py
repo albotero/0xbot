@@ -65,10 +65,10 @@ class DivergenceSignal:
         hh = lh = hl = ll = False
         # If last value is the highest of the series, it has higher highs/lows
         # If last value is the lowest of the series, it has lower highs/lows
-        if len(highs):
+        if len(highs) > 1:
             hh = highs[-1] == max(highs)
             lh = highs[-1] == min(highs)
-        if len(lows):
+        if len(lows) > 1:
             hl = lows[-1] == max(lows)
             ll = lows[-1] == min(lows)
         # Return data

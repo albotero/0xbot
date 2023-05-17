@@ -7,28 +7,27 @@ from scripts.markets.spot import SpotStrategy
 
 def strategy(exchange: ExchangeInterface, market: str) -> None:
     signals = [
-        ### Check divergence between price and Stochastic Oscillator
+        ### Check divergence between price and RSI
         DivergenceSignal(
             indicator=Indicator(Indicator.TYPE_RSI, {"periods": 14}),
             indicator_header="rsi(14)",
         ),
-        ### Confirm divergence with a crossover in the stochastic fast and slow lines
-        ### No kwargs given => stoch uses by default periods=14 and slow_periods=3
-        Signal(
-            signal_ind=Indicator(Indicator.TYPE_STOCH),
-            signal_header="stoch-f(14)",
-            base_ind=Indicator(Indicator.TYPE_STOCH),
-            base_header="stoch-s(14)",
-        ),
+        ### RSI is < 40 or > than 60
+         Signal(
+            signal_ind=Indicator(Indicator.TYPE_RSI, {"periods": 14}),
+            signal_header="rsi(14)",
+            buy_limit=40,
+            sell_limit=60,
+         ),
     ]
     if market == "futures":
         strategy = FuturesStrategy(
             name="Divergence",
             exchange=exchange,
             leverage=5,
-            order_value=0.5,
+            order_value=3,
             signals=signals,
-            timeframe="5m",
+            timeframe="4h",
             risk_reward_ind=Indicator(Indicator.TYPE_ATR, {"periods": 14}),
             risk_reward_ratio=3,
             trailing_stop=True,
@@ -41,6 +40,7 @@ def strategy(exchange: ExchangeInterface, market: str) -> None:
             exchange=exchange,
             order_value=2.5,
             signals=signals,
+            min_signals_percentage=1,
             timeframe="5m",
             risk_reward_ind=Indicator(Indicator.TYPE_ATR, {"periods": 14}),
             risk_reward_ratio=3,
