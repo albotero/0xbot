@@ -38,6 +38,6 @@ class I:
 
 
 def progress_bar(index, count, bar_length=30):
-    step = int(bar_length / count)
-    progress = index * step
-    return C.Style("\U00002588" * int(progress), C.GREEN) + C.Style("\U00002592" * int(bar_length - progress), C.CYAN)
+    step = bar_length / count
+    progress = int(index * step)
+    return C.Style("\U00002588" * int(progress), C.GREEN) + C.Style("\U00002592" * (bar_length - progress), C.CYAN)

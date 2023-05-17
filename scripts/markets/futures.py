@@ -31,7 +31,7 @@ class FuturesStrategy:
 
     `min_signals_percentage`: percentage of signals to place an order
 
-    `trailing_stop`: whether to trail or not stop loss"""
+    `trailing_stop`: whether to trail or not take profit"""
 
     def __init__(
         self,

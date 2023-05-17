@@ -72,7 +72,7 @@ class BinanceFutures(ExchangeInterface):
     def update_account_data(self) -> None:
         """Retrieves updated data from Binance Futures account"""
         # Update console
-        print(C.Style(f"\r{I.CLOCK} Updating account data ... ", C.DARKCYAN), end="")
+        print(C.Style(f"\r{I.CLOCK} Updating account data ... ", C.DARKCYAN), end=" " * 50)
         # Update account
         data = self.client.account()
         # Account Balances

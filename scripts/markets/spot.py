@@ -256,17 +256,17 @@ class SpotStrategy:
             )
         print(
             f"{I.PROFIT} Unrealized Profit:",
-            C.Style(f"{unrealized_profit} {self.exchange.quote_asset}", C.CYAN),
+            C.Style(unrealized_profit, C.CYAN),
         )
         print(
             f"{I.PROFIT} Locked {self.exchange.quote_asset} Equivalent Balance:",
             C.Style(f"{locked_balance} {self.exchange.quote_asset}", C.CYAN),
         )
         print(
-            f"{I.PROFIT} Free {self.exchange.quote_asset} Equivalent Balance:",
+            f"{I.PROFIT} Free {self.exchange.quote_asset} Equivalent Balance:  ",
             C.Style(f"{free_balance} {self.exchange.quote_asset}", C.CYAN),
         )
         print(
-            f"{I.PROFIT} Total {self.exchange.quote_asset} Equivalent Balance:",
+            f"{I.PROFIT} Total {self.exchange.quote_asset} Equivalent Balance: ",
             C.Style(f"{total_balance} {self.exchange.quote_asset}", C.CYAN),
         )
