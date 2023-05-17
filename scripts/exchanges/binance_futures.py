@@ -192,10 +192,13 @@ class BinanceFutures(ExchangeInterface):
         order_response = C.Style("Order: ", C.DARKCYAN) + self.place_order(
             response_args=["origQty"], kwargs=order_kwargs
         ).replace("origQty", "Qty")
+        sl_response = tp_response = None
         # Change direction for SL and TP
         direction *= -1
         # Stop loss arguments
         if not I.CROSS in order_response and sl is not None:
+            # Activation price: 2/3 way from price to target
+            act_price = (price + 2 * sl) / 3
             # Args
             sl_kwargs = {
                 "symbol": symbol,
@@ -203,30 +206,26 @@ class BinanceFutures(ExchangeInterface):
                 "positionSide": "BOTH",
                 "type": "STOP",
                 "quantity": qty,
-                "stopPrice": round_float_to_str(number=(price + sl) / 2, decimal_places=tick_size),  # Trigger
+                "stopPrice": round_float_to_str(number=act_price, decimal_places=tick_size),  # Trigger
                 "price": round_float_to_str(number=sl, decimal_places=tick_size),  # SL
                 "reduceOnly": "true",
                 "workingType": "MARK_PRICE",
             }
             sl_response = C.Style("Stop Loss: ", C.DARKCYAN) + (
-                self.place_order(response_args=["price", "stopPrice"], kwargs=sl_kwargs)
-                .replace("price", "Activate")
-                .replace("stopPrice", "Limit")
+                self.place_order(response_args=["stopPrice", "price"], kwargs=sl_kwargs)
+                .replace("price", "Limit")
+                .replace("stopPrice", "Activate")
             )
         # Take profit arguments
         if not I.CROSS in order_response and tp is not None:
             # Args
             if trailing:
-                cr = min(max(tp, 0.1), 20)
+                cr = min(max(tp, 0.1), 5)
                 tp_kwargs = {
                     "symbol": symbol,
                     "side": side_from_direction(direction=direction),
                     "positionSide": "BOTH",
                     "type": "TRAILING_STOP_MARKET",
-                    "activationPrice": round_float_to_str(
-                        number=price - price * cr * direction / 100,
-                        decimal_places=tick_size,
-                    ),
                     "quantity": qty,
                     "reduceOnly": "true",
                     "callbackRate": round_float_to_str(number=cr, decimal_places=1),
@@ -238,21 +237,23 @@ class BinanceFutures(ExchangeInterface):
                     .replace("priceRate", "Trailing%")
                 )
             else:
+                # Activation price: 2/3 way from price to target
+                act_price = (price + 2 * tp) / 3
                 tp_kwargs = {
                     "symbol": symbol,
                     "side": side_from_direction(direction=direction),
                     "positionSide": "BOTH",
                     "type": "TAKE_PROFIT",
                     "quantity": qty,
-                    "stopPrice": round_float_to_str(number=(price + tp) / 2, decimal_places=tick_size),  # Trigger
+                    "stopPrice": round_float_to_str(number=act_price, decimal_places=tick_size),  # Trigger
                     "price": round_float_to_str(number=tp, decimal_places=tick_size),  # TP
                     "reduceOnly": "true",
                     "workingType": "MARK_PRICE",
                 }
                 tp_response = C.Style("Take Profit: ", C.DARKCYAN) + (
-                    self.place_order(response_args=["price", "stopPrice"], kwargs=tp_kwargs)
-                    .replace("price", "Activate")
-                    .replace("stopPrice", "Limit")
+                    self.place_order(response_args=["stopPrice", "price"], kwargs=tp_kwargs)
+                    .replace("price", "Limit")
+                    .replace("stopPrice", "Activate")
                 )
         # Return responses
         response = f"{order_response} - Mark price {price}"
