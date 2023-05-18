@@ -108,6 +108,7 @@ def main():
                 try:
                     strategy[1](exchange=bn, market=settings["market"])
                 except KeyboardInterrupt:
+                    print()
                     main()
 
 
