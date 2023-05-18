@@ -73,7 +73,8 @@ class BinanceSpot(ExchangeInterface):
     def update_account_data(self) -> None:
         """Retrieves updated data from Binance Futures account"""
         # Update console
-        print(C.Style(f"\r{I.CLOCK} Updating account data ... ", C.DARKCYAN), end=" " * 50)
+        print("\r", end=" " * 100)
+        print(C.Style(f"\r{I.CLOCK} Updating account data ... ", C.DARKCYAN), end="")
         # Update account
         self.account = self.client.account()
         # Assets balances
@@ -134,6 +135,10 @@ class BinanceSpot(ExchangeInterface):
                             self.quote_asset,
                         )
                     )
+
+    def get_server_time(self) -> int:
+        """Retrieves current server's timestamp"""
+        return self.client.time()["serverTime"]
 
     def get_candlestick_data(self, _symbol, _timeframe, _qty):
         """Query Binance for candlestick data"""

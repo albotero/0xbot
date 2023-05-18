@@ -1,6 +1,8 @@
-from datetime import datetime
+import datetime
+import time
 from pandas import to_datetime
-
+from scripts.console import C, I
+from scripts.exchanges.exchange import ExchangeInterface
 from scripts.indicators.indicator import Direction
 
 
@@ -29,35 +31,36 @@ def determine_percent_rise(open: float, close: float) -> float:
     return (close - open) * 100 / open
 
 
-def timeframe_to_seconds(timeframe: str) -> float:
-    """Converts a timeframe string to equivalent number of seconds"""
-    base = float(timeframe[:-1])
-    time_unit = timeframe[-1:]
-    if time_unit == "s":
-        return base
-    elif time_unit == "m":
-        return base * 60
-    elif time_unit == "h":
-        return base * 60 * 60
-    elif time_unit == "d":
-        return base * 60 * 60 * 24
-    elif time_unit == "w":
-        return base * 60 * 60 * 24 * 7
-    elif time_unit == "M":
-        return base * 60 * 60 * 24 * 30
-
-
-def seconds_till_next_close(timeframe: str) -> int:
-    """Calculate when the next candle will close"""
-    # Calculate seconds since midnight
-    now = datetime.now()
-    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    seconds_since_midnight = (now - midnight).total_seconds()
-    # Get seconds of the timeframe
-    seconds_timeframe = timeframe_to_seconds(timeframe)
-    # Modulo = seconds since last close
-    last_close = seconds_since_midnight % seconds_timeframe
-    return seconds_timeframe - last_close
+def sleep_till_next_candle(exchange: ExchangeInterface, timeframe: str) -> None:
+    """Sleep until candle close time"""
+    # Update console
+    print(C.Style(f"\r{I.CLOCK} Waiting for candle close @ timeframe {timeframe} ... ", C.YELLOW), end="")
+    # Any symbol will do, in this case BTCUSDT
+    close_time = exchange.get_candlestick_data(_symbol="BTCUSDT", _timeframe=timeframe, _qty=1)[0]["close_time"]
+    # Get servers current time
+    current_time = exchange.get_server_time()
+    # Remaining ms + 1 = next open ms
+    remaining_time = close_time - current_time + 1
+    if remaining_time > 0:
+        # Clear console
+        print(f"\r{'':<100}", end="\r")
+        # Remaining seconds
+        remaining_time /= 1000
+        # Sleep until next open time
+        step = 0.1
+        while remaining_time > 0:
+            dt = datetime.timedelta(seconds=int(remaining_time))
+            # Update console
+            print(C.Style(f"\r{I.CLOCK} Waiting for candle close @ {str(dt)} ...", C.YELLOW), end="")
+            # Sleep
+            time.sleep(step)
+            # Update counter
+            remaining_time -= step
+        # Clear console
+        print(f"\r{'':<100}", end="\r")
+    else:
+        # Already passed, get new data
+        sleep_till_next_candle(exchange, timeframe)
 
 
 def side_from_direction(direction: Direction) -> str:

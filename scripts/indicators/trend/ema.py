@@ -1,7 +1,7 @@
 from pandas import DataFrame
 
 
-def ema(data: DataFrame, periods: int) -> None:
+def ema(data: DataFrame, periods: int, header: str = "close") -> None:
     """Exponential Moving Average
 
     Return Header: EMA"""

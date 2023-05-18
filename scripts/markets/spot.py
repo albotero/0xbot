@@ -1,11 +1,9 @@
 from datetime import datetime
 from tabulate import tabulate
-from scripts.common import round_float_to_str, seconds_till_next_close
+from scripts.common import round_float_to_str, sleep_till_next_candle
 from scripts.console import *
 from scripts.exchanges.exchange import ExchangeInterface
 from scripts.indicators.indicator import Direction, Indicator, Signal
-import time
-
 from scripts.indicators.trend.divergence import DivergenceSignal
 
 
@@ -54,10 +52,8 @@ class SpotStrategy:
         """Place an order if ≥ percentage of signals say so"""
         # Update console
         self.print_positions()
-        # Wait for current candle to close + 3 seconds
-        # Additional 3 seconds is to ensure last candle is the one that is used
-        print(C.Style("{:<100}\n... idle ... ".format(""), C.YELLOW), end="")
-        time.sleep(seconds_till_next_close(self.timeframe) + 3)
+        # Sleep till candle close
+        sleep_till_next_candle(exchange=self.exchange, timeframe=self.timeframe)
         # Update console
         total_symbols = len(self.exchange.symbols.keys())
         mode = "TEST" if self.exchange.test_mode else "LIVE"
@@ -270,3 +266,4 @@ class SpotStrategy:
             f"{I.PROFIT} Total {self.exchange.quote_asset} Equivalent Balance: ",
             C.Style(f"{total_balance} {self.exchange.quote_asset}", C.CYAN),
         )
+        print()

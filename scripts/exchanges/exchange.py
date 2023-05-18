@@ -14,6 +14,14 @@ class ExchangeInterface(metaclass=ABCMeta):
     test_mode: bool
 
     @abstractmethod
+    def get_server_time(self) -> int:
+        pass
+
+    @abstractmethod
+    def get_candlestick_data(self, _symbol, _timeframe, _qty) -> None:
+        pass
+
+    @abstractmethod
     def get_data_from_exchange(self, symbol: str, timeframe: str) -> None:
         pass
 

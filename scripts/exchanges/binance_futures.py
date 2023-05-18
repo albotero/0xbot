@@ -72,7 +72,8 @@ class BinanceFutures(ExchangeInterface):
     def update_account_data(self) -> None:
         """Retrieves updated data from Binance Futures account"""
         # Update console
-        print(C.Style(f"\r{I.CLOCK} Updating account data ... ", C.DARKCYAN), end=" " * 50)
+        print("\r", end=" " * 100)
+        print(C.Style(f"\r{I.CLOCK} Updating account data ... ", C.DARKCYAN), end="")
         # Update account
         data = self.client.account()
         # Account Balances
@@ -99,6 +100,10 @@ class BinanceFutures(ExchangeInterface):
                     "markPrice": float(mark_prices.get(p["symbol"], 0.0)),
                 }
         print("\r{:<80}".format(""), end="\r")
+
+    def get_server_time(self) -> int:
+        """Retrieves current server's timestamp"""
+        return self.client.time()["serverTime"]
 
     def get_candlestick_data(self, _symbol, _timeframe, _qty):
         """Query Binance for candlestick data"""
@@ -221,11 +226,15 @@ class BinanceFutures(ExchangeInterface):
             # Args
             if trailing:
                 cr = min(max(tp, 0.1), 5)
+                # Activation price: 2/3 way from price to target
+                targ_price = price - price * cr * direction / 100
+                act_price = (price + 2 * targ_price) / 3
                 tp_kwargs = {
                     "symbol": symbol,
                     "side": side_from_direction(direction=direction),
                     "positionSide": "BOTH",
                     "type": "TRAILING_STOP_MARKET",
+                    "activationPrice": round_float_to_str(number=act_price, decimal_places=tick_size),
                     "quantity": qty,
                     "reduceOnly": "true",
                     "callbackRate": round_float_to_str(number=cr, decimal_places=1),
