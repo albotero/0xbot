@@ -79,8 +79,6 @@ def select_strategy() -> "tuple[str | Any]":
 
 
 def main():
-    # Clear screen
-    os.system("cls||clear")
     # Load bot-config
     settings = load_bot_config()
     if settings:
@@ -115,6 +113,9 @@ def main():
 
 if __name__ == "__main__":
     try:
+        # Clear screen
+        os.system("cls||clear")
+        # Run script
         main()
     except KeyboardInterrupt:
         sys.exit()
