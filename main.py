@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from typing import Any
 
 from scripts.exchanges.binance_futures import BinanceFutures
@@ -106,8 +107,14 @@ def main():
                         C.Style(settings["market"], C.DARKCYAN),
                     ),
                 )
-                strategy[1](exchange=bn, market=settings["market"])
+                try:
+                    strategy[1](exchange=bn, market=settings["market"])
+                except KeyboardInterrupt:
+                    main()
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit()
