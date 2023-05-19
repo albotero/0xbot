@@ -173,7 +173,7 @@ class BinanceSpot(ExchangeInterface):
         df_data = DataFrame(raw_data)
         # Convert the time to human readable format
         df_data["time"] = readable_time(df_data["time"])
-        df_data["close_time"] = readable_time(df_data["close_time"])
+        # df_data["close_time"] = readable_time(df_data["close_time"])
         # Update self.candlesticks
         self.candlesticks.update({f"{symbol}-{timeframe}": df_data})
 

@@ -42,8 +42,8 @@ def sleep_till_next_candle(exchange: ExchangeInterface, timeframe: str, remainin
     close_time = exchange.get_candlestick_data(_symbol="BTCUSDT", _timeframe=timeframe, _qty=1)[0]["close_time"]
     # Get servers current time
     current_time = exchange.get_server_time()
-    # Remaining ms + 1 = next open ms
-    remaining_ms = close_time - current_time + 1
+    # Remaining ms = next close ms + 1.5 extra second to allow new candle to open
+    remaining_ms = close_time - current_time + 1500
     remaining = ""
     step_ms = 300
     # Sleep over half a minute

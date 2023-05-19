@@ -81,6 +81,8 @@ class FuturesStrategy:
         print()
         # Update account data from Exchange
         self.exchange.update_account_data()
+        # Get servers current time
+        current_time = self.exchange.get_server_time()
         # Initialize variables
         signal_weight = 1 / len(self.signals)
         # Check signals
@@ -91,7 +93,9 @@ class FuturesStrategy:
                 continue
             # Update price data from Exchange
             self.exchange.get_data_from_exchange(symbol=symbol, timeframe=self.timeframe)
+            # Get closed candles
             candles = self.exchange.candlesticks[f"{symbol}-{self.timeframe}"]
+            candles = candles.loc[candles["close_time"] <= current_time]
             avg_signal = 0
             analysis = None
             descriptions = []
