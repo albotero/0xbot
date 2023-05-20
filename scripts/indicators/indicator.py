@@ -96,37 +96,48 @@ class Signal:
 
     def emit_signal(self, data: DataFrame) -> tuple[int, str]:
         """Emit BUY, NEUTRAL or SELL signal of the indicator(s)"""
-        # If signal is the price
-        signal_price = self.signal_header == "close"
         # Update signal data
-        if signal_price:
+        if self.signal_header == "close":
             # Analyze base indicator
             self.base_ind.analyze_data(data)
             # Buy if price is greater than ema (trend), sell otherwise
             self.buy_limit = self.sell_limit = data.iloc[-1][self.base_header]
+            # Reverse
+            self.reverse = True
         else:
             self.signal_ind.analyze_data(data)
         current_signal = data.iloc[-1][self.signal_header].item()
         # Buy/Sell limits
         direction = Direction.NEUTRAL
+        description = ""
         if self.reverse:
             if self.buy_limit and current_signal >= self.buy_limit:
                 direction = Direction.BULLISH
+                description = "{signal} ≥ {limit}".format(
+                    signal=self.signal_header.replace("close", "price"),
+                    limit=self.base_header if self.base_header else self.buy_limit,
+                )
             if self.sell_limit and current_signal <= self.sell_limit:
                 direction = Direction.BEARISH
+                description = "{signal} ≤ {limit}".format(
+                    signal=self.signal_header.replace("close", "price"),
+                    limit=self.base_header if self.base_header else self.sell_limit,
+                )
         else:
             if self.buy_limit and current_signal <= self.buy_limit:
                 direction = Direction.BULLISH
-            if self.sell_limit and current_signal >= self.sell_limit:
-                direction = Direction.BEARISH
-        if direction != Direction.NEUTRAL:
-            return (
-                direction,
-                "{signal} ≤ {limit}".format(
+                description = "{signal} ≥ {limit}".format(
                     signal=self.signal_header.replace("close", "price"),
                     limit=self.base_header if self.base_header else self.buy_limit,
-                ),
-            )
+                )
+            if self.sell_limit and current_signal >= self.sell_limit:
+                direction = Direction.BEARISH
+                description = "{signal} ≥ {limit}".format(
+                    signal=self.signal_header.replace("close", "price"),
+                    limit=self.base_header if self.base_header else self.sell_limit,
+                )
+        if direction != Direction.NEUTRAL:
+            return direction, description
         # Check if crosses base
         if self.base_header:
             if type(self.base_ind) == float:

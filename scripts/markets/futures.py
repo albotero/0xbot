@@ -95,7 +95,7 @@ class FuturesStrategy:
             self.exchange.get_data_from_exchange(symbol=symbol, timeframe=self.timeframe)
             # Get closed candles
             candles = self.exchange.candlesticks[f"{symbol}-{self.timeframe}"]
-            candles = candles.loc[candles["close_time"] <= current_time]
+            candles.drop(candles[(candles["close_time"] > current_time)].index, inplace=True)
             avg_signal = 0
             analysis = None
             descriptions = []
