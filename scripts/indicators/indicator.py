@@ -126,7 +126,7 @@ class Signal:
         else:
             if self.buy_limit and current_signal <= self.buy_limit:
                 direction = Direction.BULLISH
-                description = "{signal} ≥ {limit}".format(
+                description = "{signal} ≤ {limit}".format(
                     signal=self.signal_header.replace("close", "price"),
                     limit=self.base_header if self.base_header else self.buy_limit,
                 )
