@@ -119,4 +119,5 @@ if __name__ == "__main__":
         # Run script
         main()
     except KeyboardInterrupt:
+        print()
         sys.exit()
