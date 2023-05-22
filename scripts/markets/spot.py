@@ -2,8 +2,8 @@ from datetime import datetime
 from tabulate import tabulate
 from scripts.common import round_float_to_str, sleep_till_next_candle
 from scripts.console import *
-from scripts.exchanges.exchange import ExchangeInterface
-from scripts.indicators.indicator import Direction, Indicator, Signal
+from scripts.exchange import ExchangeInterface
+from scripts.indicator import Direction, Indicator, Signal
 from scripts.indicators.trend.divergence import DivergenceSignal
 
 
@@ -37,7 +37,7 @@ class SpotStrategy:
         risk_reward_ratio: float,
         signals: "list[Signal | DivergenceSignal]",
         timeframe: str,
-        min_signals_percentage: float = 0.75,
+        min_signals_percentage: float = 1,
     ) -> None:
         self.exchange = exchange
         self.min_signals_percentage = min_signals_percentage

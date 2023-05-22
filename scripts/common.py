@@ -2,8 +2,8 @@ import datetime
 import time
 from pandas import to_datetime
 from scripts.console import C, I
-from scripts.exchanges.exchange import ExchangeInterface
-from scripts.indicators.indicator import Direction
+from scripts.exchange import ExchangeInterface
+from scripts.indicator import Direction
 
 
 def readable_time(time):

@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from pandas import DataFrame
 
-from scripts.indicators.indicator import Direction
+from scripts.indicator import Direction
 
 
 class ExchangeInterface(metaclass=ABCMeta):

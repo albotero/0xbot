@@ -82,9 +82,11 @@ class Signal:
         signal_header: str,
         buy_limit: "float | None" = None,
         sell_limit: "float | None" = None,
-        base_ind: "Indicator | float | None" = None,
+        cross_limit: "float | None" = None,
+        base_ind: "Indicator | None" = None,
         base_header: str = None,
         reverse: bool = False,
+        rising: bool = False,
     ) -> None:
         self.signal_ind = signal_ind
         self.signal_header = signal_header
@@ -92,7 +94,9 @@ class Signal:
         self.base_header = base_header
         self.buy_limit = buy_limit
         self.sell_limit = sell_limit
+        self.cross_limit = cross_limit
         self.reverse = reverse
+        self.rising = rising
 
     def emit_signal(self, data: DataFrame) -> tuple[int, str]:
         """Emit BUY, NEUTRAL or SELL signal of the indicator(s)"""
@@ -107,62 +111,80 @@ class Signal:
         else:
             self.signal_ind.analyze_data(data)
         current_signal = data.iloc[-1][self.signal_header].item()
-        # Buy/Sell limits
         direction = Direction.NEUTRAL
-        description = ""
-        if self.reverse:
-            if self.buy_limit and current_signal >= self.buy_limit:
+        description = None
+        # Rising
+        if self.rising:
+            prev_signal = data.iloc[-2][self.signal_header].item()
+            if current_signal > prev_signal and not self.reverse:
                 direction = Direction.BULLISH
-                description = "{signal} ≥ {limit}".format(
-                    signal=self.signal_header.replace("close", "price"),
-                    limit=self.base_header if self.base_header else self.buy_limit,
+                description = "{signal} rising".format(
+                    signal=self.signal_header.replace("close", "price")
                 )
-            if self.sell_limit and current_signal <= self.sell_limit:
+            if current_signal < prev_signal and self.reverse:
                 direction = Direction.BEARISH
-                description = "{signal} ≤ {limit}".format(
-                    signal=self.signal_header.replace("close", "price"),
-                    limit=self.base_header if self.base_header else self.sell_limit,
+                description = "{signal} falling".format(
+                    signal=self.signal_header.replace("close", "price")
                 )
-        else:
-            if self.buy_limit and current_signal <= self.buy_limit:
-                direction = Direction.BULLISH
-                description = "{signal} ≤ {limit}".format(
-                    signal=self.signal_header.replace("close", "price"),
-                    limit=self.base_header if self.base_header else self.buy_limit,
-                )
-            if self.sell_limit and current_signal >= self.sell_limit:
-                direction = Direction.BEARISH
-                description = "{signal} ≥ {limit}".format(
-                    signal=self.signal_header.replace("close", "price"),
-                    limit=self.base_header if self.base_header else self.sell_limit,
-                )
-        if direction != Direction.NEUTRAL:
             return direction, description
+        # Buy/Sell limits
+        if self.reverse:
+            if self.buy_limit and current_signal > self.buy_limit:
+                direction = Direction.BULLISH
+                description = "{signal} > {limit}".format(
+                    signal=self.signal_header.replace("close", "price"),
+                    limit=self.base_header if self.base_header else self.buy_limit,
+                )
+                return direction, description
+            if self.sell_limit and current_signal < self.sell_limit:
+                direction = Direction.BEARISH
+                description = "{signal} < {limit}".format(
+                    signal=self.signal_header.replace("close", "price"),
+                    limit=self.base_header if self.base_header else self.sell_limit,
+                )
+                return direction, description
+        else:
+            if self.buy_limit and current_signal < self.buy_limit:
+                direction = Direction.BULLISH
+                description = "{signal} < {limit}".format(
+                    signal=self.signal_header.replace("close", "price"),
+                    limit=self.base_header if self.base_header else self.buy_limit,
+                )
+                return direction, description
+            if self.sell_limit and current_signal > self.sell_limit:
+                direction = Direction.BEARISH
+                description = "{signal} > {limit}".format(
+                    signal=self.signal_header.replace("close", "price"),
+                    limit=self.base_header if self.base_header else self.sell_limit,
+                )
+                return direction, description
+        # Check if crosses limit
+        if self.cross_limit:
+            # Get last values
+            last_signal = data.iloc[-2][self.signal_header].item()
+            # BUY signal if crosses upwards
+            if last_signal <= self.cross_limit and current_signal > self.cross_limit:
+                return (Direction.BEARISH if self.reverse else Direction.BULLISH,
+                        f"{self.signal_header} crossed up {self.base_header}")
+            # SELL signal if crosses downwards
+            if last_signal >= self.cross_limit and current_signal < self.cross_limit:
+                return (Direction.BULLISH if self.reverse else Direction.BEARISH,
+                        f"{self.signal_header} crossed down {self.base_header}")
         # Check if crosses base
-        if self.base_header:
-            if type(self.base_ind) == float:
-                # Check if crosses a threshold
-                # Get last values
-                last_signal = data.iloc[-2][self.signal_header].item()
-                # BUY signal if crosses upwards
-                if last_signal <= self.base_ind and current_signal > self.base_ind:
-                    return Direction.BULLISH, f"{self.signal_header} crossed up {self.base_header}"
-                # SELL signal if crosses downwards
-                if last_signal >= self.base_ind and current_signal < self.base_ind:
-                    return Direction.BEARISH, f"{self.signal_header} crossed down {self.base_header}"
-            else:
-                # Check if crosses base indicator
-                # Analyze base indicator
-                self.base_ind.analyze_data(data)
-                # Get last values
-                last_signal = data.iloc[-2][self.signal_header].item()
-                last_base = data.iloc[-2][self.base_header].item()
-                current_base = data.iloc[-1][self.base_header].item()
-                # BUY signal if crosses upwards
-                if last_signal <= last_base and current_signal > current_base:
-                    return Direction.BULLISH, f"{self.signal_header} crossed up {self.base_header}"
-                # SELL signal if crosses downwards
-                if last_signal >= last_base and current_signal < current_base:
-                    return Direction.BEARISH, f"{self.signal_header} crossed down {self.base_header}"
+        elif self.base_header:
+            # Analyze base indicator
+            self.base_ind.analyze_data(data)
+            # Get last values
+            last_signal = data.iloc[-2][self.signal_header].item()
+            last_base = data.iloc[-2][self.base_header].item()
+            current_base = data.iloc[-1][self.base_header].item()
+            # BUY signal if crosses upwards
+            if last_signal <= last_base and current_signal > current_base:
+                return (Direction.BEARISH if self.reverse else Direction.BULLISH,
+                        f"{self.signal_header} crossed up {self.base_header}")
+            # SELL signal if crosses downwards
+            if last_signal >= last_base and current_signal < current_base:
+                return (Direction.BULLISH if self.reverse else Direction.BEARISH,
+                        f"{self.signal_header} crossed down {self.base_header}")
         # NEUTRAL if no signals were emitted
-        return Direction.NEUTRAL, None
+        return direction, description

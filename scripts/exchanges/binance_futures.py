@@ -4,8 +4,7 @@ from pandas import DataFrame
 
 from scripts.common import readable_time, round_float_to_str, side_from_direction, str_to_decimal_places
 from scripts.console import C, I
-from scripts.exchanges.exchange import ExchangeInterface
-from scripts.indicators.indicator import Direction
+from scripts.exchange import ExchangeInterface
 
 
 class BinanceFutures(ExchangeInterface):

@@ -2,8 +2,8 @@ from datetime import datetime
 from tabulate import tabulate
 from scripts.common import round_float_to_str, sleep_till_next_candle
 from scripts.console import *
-from scripts.exchanges.exchange import ExchangeInterface
-from scripts.indicators.indicator import Direction, Indicator, Signal
+from scripts.exchange import ExchangeInterface
+from scripts.indicator import Direction, Indicator, Signal
 from scripts.indicators.trend.divergence import DivergenceSignal
 
 
@@ -42,7 +42,7 @@ class FuturesStrategy:
         signals: "list[Signal | DivergenceSignal]",
         timeframe: str,
         leverage: int = 1,
-        min_signals_percentage: float = 0.75,
+        min_signals_percentage: float = 1,
         trailing_stop: bool = True,
     ) -> None:
         self.exchange = exchange

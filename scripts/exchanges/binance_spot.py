@@ -2,8 +2,8 @@ from binance.error import ClientError
 from binance.spot import Spot
 from pandas import DataFrame
 from scripts.common import readable_time, round_float_to_str, side_from_direction, str_to_decimal_places
-from scripts.exchanges.exchange import ExchangeInterface
-from scripts.indicators.indicator import Direction
+from scripts.exchange import ExchangeInterface
+from scripts.indicator import Direction
 from scripts.console import C, I
 
 

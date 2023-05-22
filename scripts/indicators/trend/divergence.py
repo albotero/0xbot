@@ -1,7 +1,7 @@
 import numpy as np
 from pandas import DataFrame, Series
 from scipy.signal import argrelextrema
-from scripts.indicators.indicator import Direction, Indicator
+from scripts.indicator import Direction, Indicator
 
 
 class DivergenceSignal:

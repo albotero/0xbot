@@ -1,12 +1,15 @@
 import json
 import os
 import sys
-from typing import Any
 
+from scripts.examples.adx_macd import AdxMacdStrategy
+from scripts.examples.divergences import DivergencesStrategy
+from scripts.examples.macd_rsi import MacdRsiStrategy
+from scripts.exchange import ExchangeInterface
 from scripts.exchanges.binance_futures import BinanceFutures
 from scripts.exchanges.binance_spot import BinanceSpot
 from scripts.console import C, I
-from scripts.examples import divergences_example, technical_analysis_example
+from scripts.strategy import StrategyInterface
 
 settings_path = "bot-config.json"
 
@@ -43,12 +46,13 @@ def load_bot_config():
     }
 
 
-def select_strategy() -> "tuple[str | Any]":
+def select_strategy(exchange: ExchangeInterface, market: str) -> StrategyInterface:
     """Select one of the defined strategies to run"""
     # Implement strategies
     strategies = [
-        ("Technical Analysis Example", technical_analysis_example.strategy),
-        ("Divergences Example", divergences_example.strategy),
+        AdxMacdStrategy(exchange, market, name="ADX + MACD"),
+        MacdRsiStrategy(exchange, market, name="MACD + RSI"),
+        DivergencesStrategy(exchange, market, name="RSI Divergences"),
     ]
     # No strategies in the list
     if len(strategies) == 0:
@@ -62,7 +66,7 @@ def select_strategy() -> "tuple[str | Any]":
                 print()
                 print("You have multiple strategies defined:")
                 for n, strategy in enumerate(strategies):
-                    print(C.Style(f"  [{n+1}] {strategy[0]}", C.DARKCYAN))
+                    print(C.Style(f"  [{n+1}] {strategy.name}", C.DARKCYAN))
                 strategy_index = int(input("Which strategy would you like to use? Only text its number: "))
                 if strategy_index < 1 or strategy_index > len(strategies):
                     raise ValueError
@@ -96,17 +100,17 @@ def main():
         if bn.account:
             if bn.account["canTrade"]:
                 # Run the strategy
-                strategy = select_strategy()
+                strategy = select_strategy(bn, settings["market"])
                 print(
                     I.CHECK,
                     "Running {} @ {} {}".format(
-                        C.Style(strategy[0], C.DARKCYAN),
+                        C.Style(strategy.name, C.DARKCYAN),
                         C.Style("Binance", C.DARKCYAN),
-                        C.Style(settings["market"], C.DARKCYAN),
+                        C.Style(strategy.market, C.DARKCYAN),
                     ),
                 )
                 try:
-                    strategy[1](exchange=bn, market=settings["market"])
+                    strategy.strategy()
                 except KeyboardInterrupt:
                     print()
                     main()
