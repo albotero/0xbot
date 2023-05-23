@@ -3,13 +3,13 @@ from scripts.markets.futures import FuturesStrategy
 from scripts.strategy import StrategyInterface
 
 
-class AdxMacdStrategy(StrategyInterface):
+class MacdMaStrategy(StrategyInterface):
     leverage = 10
     order_value = 5
     risk_reward_ind = Indicator(Indicator.TYPE_ATR, {"periods": 14})
     risk_reward_ratio = 2
     timeframe = "15m"
-    trailing_stop=True
+    trailing_stop=False
 
 
     def strategy(self) -> None:
@@ -21,28 +21,12 @@ class AdxMacdStrategy(StrategyInterface):
                 signal_header="macd-h(12/26/9)",
                 cross_limit=0,
             ),
-            ### D+ is greater or lower than D-
-            ### D+ > D-: Diff > 0 => BULLISH
-            ### D+ < D-: Diff < 0 => BEARISH
+            ### Only place trades with the trend
             Signal(
-                signal_ind=Indicator(Indicator.TYPE_ADX),
-                signal_header="adx-diff(14)",
-                buy_limit=0,
-                sell_limit=0,
-                reverse=True
-            ),
-            ### ADX is > 25 for longs
-            Signal(
-                signal_ind=Indicator(Indicator.TYPE_ADX),
-                signal_header="adx(14)",
-                buy_limit=25,
-                reverse=True,
-            ),
-            ### ADX is > 25 for shorts
-            Signal(
-                signal_ind=Indicator(Indicator.TYPE_ADX),
-                signal_header="adx(14)",
-                sell_limit=25,
+                signal_ind=None,
+                signal_header="close",
+                base_ind=Indicator(Indicator.TYPE_EMA, {"periods": 20}),
+                base_header="ema(20)",
             ),
         ]
         if self.market == "futures":
