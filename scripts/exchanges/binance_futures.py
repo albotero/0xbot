@@ -224,7 +224,7 @@ class BinanceFutures(ExchangeInterface):
         if not I.CROSS in order_response and tp is not None:
             # Args
             if trailing:
-                cr = min(max(tp, 0.1), 5)
+                cr = min(max(tp, 1), 5)
                 # Activation price: 2/3 way from price to target
                 targ_price = price - price * cr * direction / 100
                 act_price = (price + 2 * targ_price) / 3
