@@ -179,10 +179,9 @@ class BinanceFutures(ExchangeInterface):
         # Filters
         step_size = str_to_decimal_places(self.symbols[symbol]["step_size"])
         tick_size = str_to_decimal_places(self.symbols[symbol]["tick_size"])
-        qty = round_float_to_str(
-            number=min(max(qty, self.symbols[symbol]["min_qty"]), self.symbols[symbol]["max_qty"]),
-            decimal_places=step_size,
-        )
+        qty = min(max(qty, self.symbols[symbol]["min_qty"]), self.symbols[symbol]["max_qty"])
+        half_qty = round_float_to_str(number=qty, decimal_places=step_size)
+        qty = round_float_to_str(number=qty, decimal_places=step_size)
         # Main order arguments
         ## Type MARKET so SL and TP can be ordered rightaway
         order_kwargs = {
@@ -196,7 +195,7 @@ class BinanceFutures(ExchangeInterface):
         order_response = C.Style("Order: ", C.DARKCYAN) + self.place_order(
             response_args=["origQty"], kwargs=order_kwargs
         ).replace("origQty", "Qty")
-        sl_response = tp_response = None
+        sl_response = tp2_response = None
         # Change direction for SL and TP
         direction *= -1
         # Stop loss arguments
@@ -223,52 +222,72 @@ class BinanceFutures(ExchangeInterface):
         # Take profit arguments
         if not I.CROSS in order_response and tp is not None:
             # Args
+            tp1_kwargs = {
+                "symbol": symbol,
+                "side": side_from_direction(direction=direction),
+                "positionSide": "BOTH",
+                "type": "TAKE_PROFIT",
+                "quantity": half_qty,
+                "stopPrice": round_float_to_str(number=act_price, decimal_places=tick_size),  # Trigger
+                "price": round_float_to_str(number=tp, decimal_places=tick_size),  # TP
+                "reduceOnly": "true",
+                "workingType": "MARK_PRICE",
+            }
             if trailing:
                 cr = min(max(tp, 1), 5)
                 # Activation price: 2/3 way from price to target
                 targ_price = price - price * cr * direction / 100
                 act_price = (price + 2 * targ_price) / 3
-                tp_kwargs = {
+                act_price = round_float_to_str(number=act_price, decimal_places=tick_size)
+                tp1_kwargs.update({"stopPrice": act_price, "price": act_price})
+                tp2_kwargs = {
                     "symbol": symbol,
                     "side": side_from_direction(direction=direction),
                     "positionSide": "BOTH",
                     "type": "TRAILING_STOP_MARKET",
-                    "activationPrice": round_float_to_str(number=act_price, decimal_places=tick_size),
-                    "quantity": qty,
+                    "activationPrice": act_price,
+                    "quantity": half_qty,
                     "reduceOnly": "true",
                     "callbackRate": round_float_to_str(number=cr, decimal_places=1),
                     "workingType": "MARK_PRICE",
                 }
-                tp_response = C.Style("Trailing Take Profit: ", C.DARKCYAN) + (
-                    self.place_order(response_args=["activatePrice", "priceRate"], kwargs=tp_kwargs)
+                tp2_response = C.Style("Trailing Take Profit: ", C.DARKCYAN) + (
+                    self.place_order(response_args=["activatePrice", "priceRate"], kwargs=tp2_kwargs)
                     .replace("activatePrice", "Activate")
                     .replace("priceRate", "Trailing%")
                 )
             else:
                 # Activation price: 2/3 way from price to target
                 act_price = (price + 2 * tp) / 3
-                tp_kwargs = {
+                act_price = round_float_to_str(number=act_price, decimal_places=tick_size)
+                tp1_kwargs.update({"stopPrice": act_price, "price": act_price})
+                tp2_kwargs = {
                     "symbol": symbol,
                     "side": side_from_direction(direction=direction),
                     "positionSide": "BOTH",
                     "type": "TAKE_PROFIT",
-                    "quantity": qty,
-                    "stopPrice": round_float_to_str(number=act_price, decimal_places=tick_size),  # Trigger
+                    "quantity": half_qty,
+                    "stopPrice": act_price,  # Trigger
                     "price": round_float_to_str(number=tp, decimal_places=tick_size),  # TP
                     "reduceOnly": "true",
                     "workingType": "MARK_PRICE",
                 }
-                tp_response = C.Style("Take Profit: ", C.DARKCYAN) + (
-                    self.place_order(response_args=["stopPrice", "price"], kwargs=tp_kwargs)
+                tp2_response = C.Style("Take Profit 2: ", C.DARKCYAN) + (
+                    self.place_order(response_args=["stopPrice", "price"], kwargs=tp2_kwargs)
                     .replace("price", "Limit")
                     .replace("stopPrice", "Activate")
                 )
+            tp1_response = C.Style("Take Profit 1: ", C.DARKCYAN) + (
+                self.place_order(response_args=["price"], kwargs=tp1_kwargs).replace("price", "Limit")
+            )
         # Return responses
         response = f"{order_response} - Mark price {price}"
         if sl_response:
             response += C.Style(" | ", C.DARKCYAN) + sl_response
-        if tp_response:
-            response += C.Style(" | ", C.DARKCYAN) + tp_response
+        if tp1_response:
+            response += C.Style(" | ", C.DARKCYAN) + tp1_response
+        if tp2_response:
+            response += C.Style(" | ", C.DARKCYAN) + tp2_response
         return response
 
     def place_order(self, response_args: list[str], kwargs) -> str:
