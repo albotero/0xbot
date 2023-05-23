@@ -108,10 +108,11 @@ class Signal:
         if self.base_limit or self.signal_header == "close":
             # Analyze base indicator
             self.base_ind.analyze_data(data)
-            # Buy if price is greater than ema (trend), sell otherwise
+            # Set base as limit
             self.buy_limit = self.sell_limit = data.iloc[-1][self.base_header]
-            # Reverse
-            self.reverse = True
+            # Buy if price is greater than ema (trend), sell otherwise
+            if self.signal_header == "close":
+                self.reverse = True
         current_signal = data.iloc[-1][self.signal_header].item()
         direction = Direction.NEUTRAL
         description = None

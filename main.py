@@ -4,6 +4,7 @@ import sys
 
 from scripts.examples.adx_macd import AdxMacdStrategy
 from scripts.examples.divergences import DivergencesStrategy
+from scripts.examples.macd import MacdStrategy
 from scripts.examples.macd_ma import MacdMaStrategy
 from scripts.examples.macd_rsi import MacdRsiStrategy
 from scripts.examples.stochastic_ma import StochasticMaStrategy
@@ -53,6 +54,7 @@ def select_strategy(exchange: ExchangeInterface, market: str) -> StrategyInterfa
     # Implement strategies
     strategies = [
         AdxMacdStrategy(exchange, market, name="ADX + MACD"),
+        MacdStrategy(exchange, market, name="MACD"),
         MacdMaStrategy(exchange, market, name="MACD + MA"),
         MacdRsiStrategy(exchange, market, name="MACD + RSI"),
         DivergencesStrategy(exchange, market, name="RSI Divergences"),

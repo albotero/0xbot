@@ -9,8 +9,7 @@ class MacdMaStrategy(StrategyInterface):
     risk_reward_ind = Indicator(Indicator.TYPE_ATR, {"periods": 14})
     risk_reward_ratio = 2
     timeframe = "1h"
-    trailing_stop=False
-
+    trailing_stop = False
 
     def strategy(self) -> None:
         """Overrides StrategyInterface.strategy(self)"""
@@ -28,6 +27,7 @@ class MacdMaStrategy(StrategyInterface):
                 base_ind=Indicator(Indicator.TYPE_EMA, {"periods": 100}),
                 base_header="ema(100)",
                 base_limit=True,
+                reverse=True,
             ),
         ]
         if self.market == "futures":
