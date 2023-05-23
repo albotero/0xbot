@@ -8,25 +8,26 @@ class MacdMaStrategy(StrategyInterface):
     order_value = 5
     risk_reward_ind = Indicator(Indicator.TYPE_ATR, {"periods": 14})
     risk_reward_ratio = 2
-    timeframe = "15m"
+    timeframe = "1h"
     trailing_stop=False
 
 
     def strategy(self) -> None:
         """Overrides StrategyInterface.strategy(self)"""
         signals = [
-            ### MACD Histogram crosses 0
+            ### MACD Signal crosses 0
             Signal(
                 signal_ind=Indicator(Indicator.TYPE_MACD),
-                signal_header="macd-h(12/26/9)",
+                signal_header="macd-s(12/26/9)",
                 cross_limit=0,
             ),
             ### Only place trades with the trend
             Signal(
-                signal_ind=None,
-                signal_header="close",
-                base_ind=Indicator(Indicator.TYPE_EMA, {"periods": 20}),
-                base_header="ema(20)",
+                signal_ind=Indicator(Indicator.TYPE_DEMA, {"periods": 12}),
+                signal_header="dema(12)",
+                base_ind=Indicator(Indicator.TYPE_EMA, {"periods": 100}),
+                base_header="ema(100)",
+                base_limit=True,
             ),
         ]
         if self.market == "futures":

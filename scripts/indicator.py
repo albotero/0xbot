@@ -85,6 +85,7 @@ class Signal:
         cross_limit: "float | None" = None,
         base_ind: "Indicator | None" = None,
         base_header: str = None,
+        base_limit: bool = False,
         reverse: bool = False,
         rising: bool = False,
     ) -> None:
@@ -95,21 +96,22 @@ class Signal:
         self.buy_limit = buy_limit
         self.sell_limit = sell_limit
         self.cross_limit = cross_limit
+        self.base_limit = base_limit
         self.reverse = reverse
         self.rising = rising
 
     def emit_signal(self, data: DataFrame) -> tuple[int, str]:
         """Emit BUY, NEUTRAL or SELL signal of the indicator(s)"""
         # Update signal data
-        if self.signal_header == "close":
+        if self.signal_ind:
+            self.signal_ind.analyze_data(data)
+        if self.base_limit or self.signal_header == "close":
             # Analyze base indicator
             self.base_ind.analyze_data(data)
             # Buy if price is greater than ema (trend), sell otherwise
             self.buy_limit = self.sell_limit = data.iloc[-1][self.base_header]
             # Reverse
             self.reverse = True
-        else:
-            self.signal_ind.analyze_data(data)
         current_signal = data.iloc[-1][self.signal_header].item()
         direction = Direction.NEUTRAL
         description = None

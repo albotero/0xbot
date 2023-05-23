@@ -195,7 +195,7 @@ class BinanceFutures(ExchangeInterface):
         order_response = C.Style("Order: ", C.DARKCYAN) + self.place_order(
             response_args=["origQty"], kwargs=order_kwargs
         ).replace("origQty", "Qty")
-        sl_response = tp2_response = None
+        sl_response = tp1_response = tp2_response = None
         # Change direction for SL and TP
         direction *= -1
         # Stop loss arguments

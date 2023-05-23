@@ -25,19 +25,20 @@ class StochasticMaStrategy(StrategyInterface):
                 sell_limit=0,
                 reverse=True,
             ),
-            ### K is < 40 for longs and > 60 for shorts
+            ### D is < 20 for longs and > 80 for shorts
             Signal(
                 signal_ind=stoch_indicator,
-                signal_header="stoch-k(14)",
-                buy_limit=40,
-                sell_limit=60,
+                signal_header="stoch-d(14)",
+                buy_limit=20,
+                sell_limit=80,
             ),
             ### Only place trades with the trend
             Signal(
-                signal_ind=None,
-                signal_header="close",
-                base_ind=Indicator(Indicator.TYPE_EMA, {"periods": 50}),
-                base_header="ema(50)",
+                signal_ind=Indicator(Indicator.TYPE_DEMA, {"periods": 20}),
+                signal_header="dema(20)",
+                base_ind=Indicator(Indicator.TYPE_EMA, {"periods": 100}),
+                base_header="ema(100)",
+                base_limit=True,
             ),
         ]
         if self.market == "futures":
