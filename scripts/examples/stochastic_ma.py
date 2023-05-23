@@ -8,7 +8,7 @@ class StochasticMaStrategy(StrategyInterface):
     order_value = 5
     risk_reward_ind = Indicator(Indicator.TYPE_ATR, {"periods": 14})
     risk_reward_ratio = 2
-    timeframe = "1m"
+    timeframe = "15m"
     trailing_stop = True
 
     def strategy(self) -> None:
