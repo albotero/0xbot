@@ -119,24 +119,24 @@ class Signal:
             if current_signal > prev_signal and not self.reverse:
                 direction = Direction.BULLISH
                 description = "{signal} rising".format(
-                    signal=self.signal_header.replace("close", "price")
+                    signal=self.signal_header.replace("close", "price"),
                 )
             if current_signal < prev_signal and self.reverse:
                 direction = Direction.BEARISH
                 description = "{signal} falling".format(
-                    signal=self.signal_header.replace("close", "price")
+                    signal=self.signal_header.replace("close", "price"),
                 )
             return direction, description
         # Buy/Sell limits
         if self.reverse:
-            if self.buy_limit and current_signal > self.buy_limit:
+            if self.buy_limit is not None and current_signal > self.buy_limit:
                 direction = Direction.BULLISH
                 description = "{signal} > {limit}".format(
                     signal=self.signal_header.replace("close", "price"),
                     limit=self.base_header if self.base_header else self.buy_limit,
                 )
                 return direction, description
-            if self.sell_limit and current_signal < self.sell_limit:
+            if self.sell_limit is not None and current_signal < self.sell_limit:
                 direction = Direction.BEARISH
                 description = "{signal} < {limit}".format(
                     signal=self.signal_header.replace("close", "price"),
@@ -144,14 +144,14 @@ class Signal:
                 )
                 return direction, description
         else:
-            if self.buy_limit and current_signal < self.buy_limit:
+            if self.buy_limit is not None and current_signal < self.buy_limit:
                 direction = Direction.BULLISH
                 description = "{signal} < {limit}".format(
                     signal=self.signal_header.replace("close", "price"),
                     limit=self.base_header if self.base_header else self.buy_limit,
                 )
                 return direction, description
-            if self.sell_limit and current_signal > self.sell_limit:
+            if self.sell_limit is not None and current_signal > self.sell_limit:
                 direction = Direction.BEARISH
                 description = "{signal} > {limit}".format(
                     signal=self.signal_header.replace("close", "price"),
@@ -164,12 +164,16 @@ class Signal:
             last_signal = data.iloc[-2][self.signal_header].item()
             # BUY signal if crosses upwards
             if last_signal <= self.cross_limit and current_signal > self.cross_limit:
-                return (Direction.BEARISH if self.reverse else Direction.BULLISH,
-                        f"{self.signal_header} crossed up {self.base_header}")
+                return (
+                    Direction.BEARISH if self.reverse else Direction.BULLISH,
+                    f"{self.signal_header} crossed up {self.base_header}",
+                )
             # SELL signal if crosses downwards
             if last_signal >= self.cross_limit and current_signal < self.cross_limit:
-                return (Direction.BULLISH if self.reverse else Direction.BEARISH,
-                        f"{self.signal_header} crossed down {self.base_header}")
+                return (
+                    Direction.BULLISH if self.reverse else Direction.BEARISH,
+                    f"{self.signal_header} crossed down {self.base_header}",
+                )
         # Check if crosses base
         elif self.base_header:
             # Analyze base indicator
@@ -180,11 +184,15 @@ class Signal:
             current_base = data.iloc[-1][self.base_header].item()
             # BUY signal if crosses upwards
             if last_signal <= last_base and current_signal > current_base:
-                return (Direction.BEARISH if self.reverse else Direction.BULLISH,
-                        f"{self.signal_header} crossed up {self.base_header}")
+                return (
+                    Direction.BEARISH if self.reverse else Direction.BULLISH,
+                    f"{self.signal_header} crossed up {self.base_header}",
+                )
             # SELL signal if crosses downwards
             if last_signal >= last_base and current_signal < current_base:
-                return (Direction.BULLISH if self.reverse else Direction.BEARISH,
-                        f"{self.signal_header} crossed down {self.base_header}")
+                return (
+                    Direction.BULLISH if self.reverse else Direction.BEARISH,
+                    f"{self.signal_header} crossed down {self.base_header}",
+                )
         # NEUTRAL if no signals were emitted
         return direction, description

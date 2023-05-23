@@ -6,6 +6,7 @@ from scripts.examples.adx_macd import AdxMacdStrategy
 from scripts.examples.divergences import DivergencesStrategy
 from scripts.examples.macd_ma import MacdMaStrategy
 from scripts.examples.macd_rsi import MacdRsiStrategy
+from scripts.examples.stochastic_ma import StochasticMaStrategy
 from scripts.exchange import ExchangeInterface
 from scripts.exchanges.binance_futures import BinanceFutures
 from scripts.exchanges.binance_spot import BinanceSpot
@@ -55,6 +56,7 @@ def select_strategy(exchange: ExchangeInterface, market: str) -> StrategyInterfa
         MacdMaStrategy(exchange, market, name="MACD + MA"),
         MacdRsiStrategy(exchange, market, name="MACD + RSI"),
         DivergencesStrategy(exchange, market, name="RSI Divergences"),
+        StochasticMaStrategy(exchange, market, name="Stochastic Oscillator + MA"),
     ]
     # No strategies in the list
     if len(strategies) == 0:
