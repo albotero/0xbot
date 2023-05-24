@@ -14,18 +14,18 @@ class MacdMaStrategy(StrategyInterface):
     def strategy(self) -> None:
         """Overrides StrategyInterface.strategy(self)"""
         signals = [
-            ### MACD Signal crosses 0
+            ### MACD Histogram crosses 0
             Signal(
                 signal_ind=Indicator(Indicator.TYPE_MACD),
-                signal_header="macd-s(12/26/9)",
+                signal_header="macd-h(12/26/9)",
                 cross_limit=0,
             ),
             ### Only place trades with the trend
             Signal(
                 signal_ind=Indicator(Indicator.TYPE_DEMA, {"periods": 12}),
                 signal_header="dema(12)",
-                base_ind=Indicator(Indicator.TYPE_EMA, {"periods": 100}),
-                base_header="ema(100)",
+                base_ind=Indicator(Indicator.TYPE_EMA, {"periods": 200}),
+                base_header="ema(200)",
                 base_limit=True,
                 reverse=True,
             ),

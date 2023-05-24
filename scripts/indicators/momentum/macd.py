@@ -16,7 +16,7 @@ def macd(data: DataFrame, short_term: int = 12, long_term: int = 26, signal: int
     # Update DataFrame
     headers = [
         f"macd({short_term}/{long_term})",
-        f"macd-s({signal})",
+        f"macd-s({short_term}/{long_term}/{signal})",
         f"macd-h({short_term}/{long_term}/{signal})",
         f"macd-ma({short_term}/{long_term}/{signal})",
     ]

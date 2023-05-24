@@ -8,7 +8,7 @@ class MacdStrategy(StrategyInterface):
     order_value = 5
     risk_reward_ind = Indicator(Indicator.TYPE_ATR, {"periods": 14})
     risk_reward_ratio = 2
-    timeframe = "1d"
+    timeframe = "2h"
     trailing_stop = False
 
     def strategy(self) -> None:
@@ -23,7 +23,7 @@ class MacdStrategy(StrategyInterface):
             ### MACD signal is < Histogram's MA for longs and > Histogram's MA for shorts
             Signal(
                 signal_ind=Indicator(Indicator.TYPE_MACD),
-                signal_header="macd-s(9)",
+                signal_header="macd-s(12/26/9)",
                 base_ind=Indicator(Indicator.TYPE_MACD),
                 base_header="macd-ma(12/26/9)",
                 base_limit=True,

@@ -31,34 +31,37 @@ def determine_percent_rise(open: float, close: float) -> float:
     return (close - open) * 100 / open
 
 
-def sleep_till_next_candle(exchange: ExchangeInterface, timeframe: str, remaining: str = None) -> None:
+def sleep_till_next_candle(exchange: ExchangeInterface, timeframe: str) -> None:
     """Sleep until candle close time"""
-    # Update console
-    if remaining:
-        print(C.Style(f"\r{'':<100}\r{I.CLOCK} Waiting for candle close @ {remaining} ... ", C.YELLOW), end="")
-    else:
-        print(C.Style(f"\r{I.CLOCK} Waiting for candle close @ timeframe {timeframe} ... ", C.YELLOW), end="")
-    # Any symbol will do, in this case BTCUSDT
-    close_time = exchange.get_candlestick_data(_symbol="BTCUSDT", _timeframe=timeframe, _qty=1)[0]["close_time"]
-    # Get servers current time
-    current_time = exchange.get_server_time()
-    # Remaining ms = next close ms + 1.5 extra second to allow new candle to open
-    remaining_ms = close_time - current_time + 1500
     remaining = ""
-    step_ms = 300
-    # Sleep over half a minute
-    for _ in range(int(30 * 1000 / step_ms)):
-        if remaining_ms > step_ms:
-            remaining_ms -= step_ms
-            remaining = str(datetime.timedelta(seconds=int(remaining_ms / 1000)))
-            print(C.Style(f"\r{'':<100}\r{I.CLOCK} Waiting for candle close @ {remaining} ... ", C.YELLOW), end="")
-            time.sleep(step_ms / 1000)
-        else:
-            # Clear console
-            print(f"\r{'':<100}", end="\r")
-            return
-    # Sync again time with server after the half minute
-    sleep_till_next_candle(exchange, timeframe, remaining=remaining)
+    # Sync time with server every 5 minutes
+    while True:
+        # Update console
+        if not remaining:
+            print(C.Style(f"\r{I.CLOCK} Waiting for {timeframe} candle to close ...", C.YELLOW), end=" ")
+        # Any symbol will do, in this case BTCUSDT
+        close_time = exchange.get_candlestick_data(_symbol="BTCUSDT", _timeframe=timeframe, _qty=1)[0]["close_time"]
+        # Get servers current time
+        current_time = exchange.get_server_time()
+        # Remaining ms = next close ms + 1.5 extra second to allow new candle to open
+        remaining_ms = close_time - current_time + 1500
+        step_ms = 330
+        # Sleep over five minutes
+        for _ in range(int(5 * 60 * 1000 / step_ms)):
+            if remaining_ms > step_ms:
+                remaining_ms -= step_ms
+                remaining = str(datetime.timedelta(seconds=int(remaining_ms / 1000)))
+                print(
+                    C.Style(
+                        f"\r{'':<100}\r{I.CLOCK} Waiting for {timeframe} candle to close @ {remaining} ...", C.YELLOW
+                    ),
+                    end=" ",
+                )
+                time.sleep(step_ms / 1000)
+            else:
+                # Clear console and exit iteration
+                print(f"\r{'':<100}", end="\r")
+                return
 
 
 def side_from_direction(direction: Direction) -> str:
