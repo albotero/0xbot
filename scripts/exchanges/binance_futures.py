@@ -179,7 +179,7 @@ class BinanceFutures(ExchangeInterface):
             self.client.change_leverage(symbol=symbol, leverage=leverage)
         except ClientError as error:
             # Return error message
-            return "{icon} {message} -> {args}".format(
+            return "{icon} {message}".format(
                 icon=I.CROSS,
                 message=C.Style("[{}] {}".format(error.error_code, error.error_message), C.RED),
             )
