@@ -162,7 +162,7 @@ class Signal:
                 )
                 return direction, description
         # Check if crosses limit
-        if self.cross_limit:
+        if self.cross_limit is not None:
             # Get last values
             last_signal = data.iloc[-2][self.signal_header].item()
             # BUY signal if crosses upwards
