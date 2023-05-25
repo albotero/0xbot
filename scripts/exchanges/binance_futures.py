@@ -175,7 +175,14 @@ class BinanceFutures(ExchangeInterface):
         # Close all previous open positions for that symbol
         self.client.cancel_open_orders(symbol=symbol)
         # Set leverage
-        self.client.change_leverage(symbol=symbol, leverage=leverage)
+        try:
+            self.client.change_leverage(symbol=symbol, leverage=leverage)
+        except ClientError as error:
+            # Return error message
+            return "{icon} {message} -> {args}".format(
+                icon=I.CROSS,
+                message=C.Style("[{}] {}".format(error.error_code, error.error_message), C.RED),
+            )
         # Filters
         step_size = str_to_decimal_places(self.symbols[symbol]["step_size"])
         tick_size = str_to_decimal_places(self.symbols[symbol]["tick_size"])
