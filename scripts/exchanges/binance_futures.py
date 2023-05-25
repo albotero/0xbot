@@ -12,7 +12,7 @@ class BinanceFutures(ExchangeInterface):
     positions: dict[str, dict[str, str]] = {}
 
     def __init__(
-        self, test_mode: bool, api_key: str, secret_key: str, quote_asset: str, candle_count: int = 200
+        self, test_mode: bool, api_key: str, secret_key: str, quote_asset: str, candle_count: int = 1000
     ) -> None:
         try:
             params = {"key": api_key, "secret": secret_key}

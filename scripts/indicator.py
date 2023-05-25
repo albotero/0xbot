@@ -169,13 +169,13 @@ class Signal:
             if last_signal <= self.cross_limit and current_signal > self.cross_limit:
                 return (
                     Direction.BEARISH if self.reverse else Direction.BULLISH,
-                    f"{self.signal_header} crossed up {self.base_header}",
+                    f"{self.signal_header} crossed up {self.cross_limit}",
                 )
             # SELL signal if crosses downwards
             if last_signal >= self.cross_limit and current_signal < self.cross_limit:
                 return (
                     Direction.BULLISH if self.reverse else Direction.BEARISH,
-                    f"{self.signal_header} crossed down {self.base_header}",
+                    f"{self.signal_header} crossed down {self.cross_limit}",
                 )
         # Check if crosses base
         elif self.base_header:

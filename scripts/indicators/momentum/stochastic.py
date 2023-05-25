@@ -6,12 +6,12 @@ def stochastic(data: DataFrame, periods: int = 14, slow_periods: int = 3) -> lis
 
     Return Headers: [0] Fast Stochastic (K) | [1] Slow Stochastic (D) | [2] K-D Diff"""
     # Period's low and high
-    low = data["low"].rolling(periods, min_periods=0).min()
-    high = data["high"].rolling(periods, min_periods=0).max()
+    low = data["low"].rolling(periods).min()
+    high = data["high"].rolling(periods).max()
     # Fast stochastic => (close - low) / (high - low) * 100
     fast = (data["close"] - low) / (high - low) * 100
     # Slow stochastic => EMA(fast_stochastic @ slow_periods)
-    slow = fast.ewm(alpha=1 / slow_periods, min_periods=0, adjust=False).mean()
+    slow = fast.ewm(span=slow_periods, adjust=False).mean()
     # Update DataFrame
     headers = [
         f"stoch-k({periods})",

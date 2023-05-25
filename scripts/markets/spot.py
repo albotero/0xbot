@@ -79,6 +79,8 @@ class SpotStrategy:
         # Check signals
         analyzed_index = 0
         for symbol, symbol_data in self.exchange.symbols.items():
+            # Update waiting
+            analyzed_index += 1
             # Only analyze if doesn't have an open position
             if self.exchange.balance.get(symbol_data["base"]):
                 continue
@@ -126,8 +128,6 @@ class SpotStrategy:
                     "{:<50}".format(progress_bar(analyzed_index, total_symbols)),
                     end="",
                 )
-            # Update waiting
-            analyzed_index += 1
         # Update account data from Exchange
         print()
         self.exchange.update_account_data()

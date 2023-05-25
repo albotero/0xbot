@@ -88,6 +88,8 @@ class FuturesStrategy:
         # Check signals
         analyzed_index = 0
         for symbol in self.exchange.symbols.keys():
+            # Update waiting
+            analyzed_index += 1
             # Only analyze if doesn't have an open position
             if self.exchange.positions.get(symbol):
                 continue
@@ -134,8 +136,6 @@ class FuturesStrategy:
                     "{:<50}".format(progress_bar(analyzed_index, total_symbols)),
                     end="",
                 )
-            # Update waiting
-            analyzed_index += 1
         # Update account data from Exchange
         self.exchange.update_account_data()
 
