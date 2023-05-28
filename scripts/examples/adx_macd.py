@@ -8,9 +8,8 @@ class AdxMacdStrategy(StrategyInterface):
     order_value = 5
     risk_reward_ind = Indicator(Indicator.TYPE_ATR, {"periods": 14})
     risk_reward_ratio = 2
-    timeframe = "15m"
-    trailing_stop=True
-
+    timeframe = "2h"
+    trailing_stop = True
 
     def strategy(self) -> None:
         """Overrides StrategyInterface.strategy(self)"""
@@ -24,25 +23,15 @@ class AdxMacdStrategy(StrategyInterface):
             ### D+ is greater or lower than D-
             ### D+ > D-: Diff > 0 => BULLISH
             ### D+ < D-: Diff < 0 => BEARISH
+            ### Only trade if there is a trend: ADX > 20
             Signal(
                 signal_ind=Indicator(Indicator.TYPE_ADX),
                 signal_header="adx-diff(14)",
                 buy_limit=0,
                 sell_limit=0,
-                reverse=True
-            ),
-            ### ADX is > 25 for longs
-            Signal(
-                signal_ind=Indicator(Indicator.TYPE_ADX),
-                signal_header="adx(14)",
-                buy_limit=25,
                 reverse=True,
-            ),
-            ### ADX is > 25 for shorts
-            Signal(
-                signal_ind=Indicator(Indicator.TYPE_ADX),
-                signal_header="adx(14)",
-                sell_limit=25,
+                consolidation_header="adx(14)",
+                consolidation_limit=20,
             ),
         ]
         if self.market == "futures":

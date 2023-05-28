@@ -83,6 +83,8 @@ class Signal:
         buy_limit: "float | None" = None,
         sell_limit: "float | None" = None,
         cross_limit: "float | None" = None,
+        consolidation_limit: "float | None" = None,
+        consolidation_header: "str | None" = None,
         base_ind: "Indicator | None" = None,
         base_header: str = None,
         base_limit: bool = False,
@@ -96,6 +98,8 @@ class Signal:
         self.buy_limit = buy_limit
         self.sell_limit = sell_limit
         self.cross_limit = cross_limit
+        self.consolidation_limit = consolidation_limit
+        self.consolidation_header = consolidation_header
         self.base_limit = base_limit
         self.reverse = reverse
         self.rising = rising
@@ -116,6 +120,10 @@ class Signal:
         current_signal = data.iloc[-1][self.signal_header].item()
         direction = Direction.NEUTRAL
         description = None
+        # Consolidation
+        if self.consolidation_limit is not None:
+            if data.iloc[-1][self.consolidation_header].item() < self.consolidation_limit:
+                return direction, description
         # Rising
         if self.rising:
             prev_signal = data.iloc[-2][self.signal_header].item()
