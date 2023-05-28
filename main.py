@@ -7,6 +7,7 @@ from scripts.examples.divergences import DivergencesStrategy
 from scripts.examples.macd import MacdStrategy
 from scripts.examples.macd_ma import MacdMaStrategy
 from scripts.examples.macd_rsi import MacdRsiStrategy
+from scripts.examples.macd_stoch_rsi import MacdStochRsiStrategy
 from scripts.examples.stochastic_ma import StochasticMaStrategy
 from scripts.exchange import ExchangeInterface
 from scripts.exchanges.binance_futures import BinanceFutures
@@ -56,6 +57,7 @@ def select_strategy(exchange: ExchangeInterface, market: str) -> StrategyInterfa
         AdxMacdStrategy(exchange, market, name="ADX + MACD"),
         MacdStrategy(exchange, market, name="MACD"),
         MacdMaStrategy(exchange, market, name="MACD + MA"),
+        MacdStochRsiStrategy(exchange, market, name="MACD + Stochastic Oscillator + RSI"),
         MacdRsiStrategy(exchange, market, name="MACD + RSI"),
         DivergencesStrategy(exchange, market, name="RSI Divergences"),
         StochasticMaStrategy(exchange, market, name="Stochastic Oscillator + MA"),
