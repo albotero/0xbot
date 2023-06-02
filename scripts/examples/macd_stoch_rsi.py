@@ -7,8 +7,8 @@ class MacdStochRsiStrategy(StrategyInterface):
     leverage = 10
     order_value = 5
     risk_reward_ind = Indicator(Indicator.TYPE_ATR, {"periods": 14})
-    risk_reward_ratio = 2
-    timeframe = "3d"
+    risk_reward_ratio = 1.7
+    timeframe = "6h"
     trailing_stop = False
 
     def strategy(self) -> None:
@@ -30,12 +30,12 @@ class MacdStochRsiStrategy(StrategyInterface):
                 sell_limit=0,
                 reverse=True,
             ),
-            ### RSI is > 40 for shorts or < than 60 for longs
+            ### RSI is > 60 for shorts or < than 40 for longs
             Signal(
                 signal_ind=Indicator(Indicator.TYPE_RSI, {"periods": 14}),
                 signal_header="rsi(14)",
-                buy_limit=60,
-                sell_limit=40,
+                buy_limit=40,
+                sell_limit=60,
             ),
         ]
         if self.market == "futures":

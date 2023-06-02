@@ -207,8 +207,8 @@ class BinanceFutures(ExchangeInterface):
         direction *= -1
         # Stop loss arguments
         if not I.CROSS in order_response and sl is not None:
-            # Activation price: 2/3 way from price to target
-            act_price = (price + 2 * sl) / 3
+            # Activation price: 0.1% away from price
+            act_price = price * (1 + 0.001 * direction)
             # Args
             sl_kwargs = {
                 "symbol": symbol,
@@ -228,6 +228,9 @@ class BinanceFutures(ExchangeInterface):
             )
         # Take profit arguments
         if not I.CROSS in order_response and tp is not None:
+            # Activation price: 0.1% away from price
+            act_price = price * (1 + 0.001 * direction)
+            act_price = round_float_to_str(number=act_price, decimal_places=tick_size)
             # Args
             tp1_kwargs = {
                 "symbol": symbol,
@@ -235,7 +238,7 @@ class BinanceFutures(ExchangeInterface):
                 "positionSide": "BOTH",
                 "type": "TAKE_PROFIT",
                 "quantity": half_qty,
-                "stopPrice": round_float_to_str(number=act_price, decimal_places=tick_size),  # Trigger
+                "stopPrice": act_price,  # Trigger
                 "price": round_float_to_str(number=tp, decimal_places=tick_size),  # TP
                 "reduceOnly": "true",
                 "workingType": "MARK_PRICE",
@@ -243,7 +246,7 @@ class BinanceFutures(ExchangeInterface):
             if trailing:
                 cr = min(max(tp, 1), 5)
                 # Activation price: 2/3 way from price to target
-                targ_price = price - price * cr * direction / 100
+                targ_price = price * (1 - cr * direction / 100)
                 act_price = (price + 2 * targ_price) / 3
                 act_price = round_float_to_str(number=act_price, decimal_places=tick_size)
                 tp1_kwargs.update({"stopPrice": act_price, "price": act_price})
@@ -264,10 +267,9 @@ class BinanceFutures(ExchangeInterface):
                     .replace("priceRate", "Trailing%")
                 )
             else:
-                # Activation price: 2/3 way from price to target
-                act_price = (price + 2 * tp) / 3
-                act_price = round_float_to_str(number=act_price, decimal_places=tick_size)
-                tp1_kwargs.update({"stopPrice": act_price, "price": act_price})
+                tp1_price = (price + 2 * tp) / 3
+                tp1_price = round_float_to_str(number=act_price, decimal_places=tick_size)
+                tp1_kwargs.update({"stopPrice": act_price, "price": tp1_price})
                 tp2_kwargs = {
                     "symbol": symbol,
                     "side": side_from_direction(direction=direction),
