@@ -1,5 +1,6 @@
 from datetime import datetime
 from tabulate import tabulate
+from scripts.candles.heikin_ashi import data_to_heikin_ashi
 from scripts.common import round_float_to_str, sleep_till_next_candle
 from scripts.console import *
 from scripts.exchange import ExchangeInterface
@@ -26,7 +27,9 @@ class SpotStrategy:
 
     `timeframe`: candlesticks timeframe
 
-    `min_signals_percentage`: percentage of signals to place an order"""
+    `min_signals_percentage`: percentage of signals to place an order
+
+    `chart_type`: "candle" (default) | "heikin_ashi" """
 
     def __init__(
         self,
@@ -38,7 +41,9 @@ class SpotStrategy:
         signals: "list[Signal | DivergenceSignal]",
         timeframe: str,
         min_signals_percentage: float = 1,
+        chart_type: str = "candle",
     ) -> None:
+        self.chart_type = chart_type
         self.exchange = exchange
         self.min_signals_percentage = min_signals_percentage
         self.name = name
@@ -89,6 +94,10 @@ class SpotStrategy:
             # Get closed candles
             candles = self.exchange.candlesticks[f"{symbol}-{self.timeframe}"]
             candles.drop(candles[(candles["close_time"] > current_time)].index, inplace=True)
+            # Chart type
+            if self.chart_type == "heikin_ashi":
+                data_to_heikin_ashi(candles)
+            # Perform analysis
             avg_signal = 0
             analysis = None
             descriptions = []

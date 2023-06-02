@@ -1,5 +1,6 @@
 from datetime import datetime
 from tabulate import tabulate
+from scripts.candles.heikin_ashi import data_to_heikin_ashi
 from scripts.common import round_float_to_str, sleep_till_next_candle
 from scripts.console import *
 from scripts.exchange import ExchangeInterface
@@ -30,7 +31,9 @@ class FuturesStrategy:
 
     `min_signals_percentage`: percentage of signals to place an order
 
-    `trailing_stop`: whether to trail or not take profit"""
+    `trailing_stop`: whether to trail or not take profit
+
+    `chart_type`: "candle" (default) | "heikin_ashi" """
 
     def __init__(
         self,
@@ -44,7 +47,9 @@ class FuturesStrategy:
         leverage: int = 1,
         min_signals_percentage: float = 1,
         trailing_stop: bool = True,
+        chart_type: str = "candle",
     ) -> None:
+        self.chart_type = chart_type
         self.exchange = exchange
         self.leverage = leverage
         self.min_signals_percentage = min_signals_percentage
@@ -98,6 +103,10 @@ class FuturesStrategy:
             # Get closed candles
             candles = self.exchange.candlesticks[f"{symbol}-{self.timeframe}"]
             candles.drop(candles[(candles["close_time"] > current_time)].index, inplace=True)
+            # Chart type
+            if self.chart_type == "heikin_ashi":
+                data_to_heikin_ashi(candles)
+            # Perform analysis
             avg_signal = 0
             analysis = None
             descriptions = []
