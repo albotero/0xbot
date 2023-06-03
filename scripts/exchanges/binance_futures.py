@@ -268,7 +268,7 @@ class BinanceFutures(ExchangeInterface):
                 )
             else:
                 tp1_price = (price + 2 * tp) / 3
-                tp1_price = round_float_to_str(number=act_price, decimal_places=tick_size)
+                tp1_price = round_float_to_str(number=tp1_price, decimal_places=tick_size)
                 tp1_kwargs.update({"stopPrice": act_price, "price": tp1_price})
                 tp2_kwargs = {
                     "symbol": symbol,
