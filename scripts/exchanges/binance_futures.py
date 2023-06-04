@@ -187,7 +187,7 @@ class BinanceFutures(ExchangeInterface):
         step_size = str_to_decimal_places(self.symbols[symbol]["step_size"])
         tick_size = str_to_decimal_places(self.symbols[symbol]["tick_size"])
         qty = min(max(qty, self.symbols[symbol]["min_qty"]), self.symbols[symbol]["max_qty"])
-        half_qty = round_float_to_str(number=qty, decimal_places=step_size)
+        half_qty = round_float_to_str(number=qty / 2, decimal_places=step_size)
         qty = round_float_to_str(number=qty, decimal_places=step_size)
         # Main order arguments
         ## Type MARKET so SL and TP can be ordered rightaway
@@ -256,7 +256,7 @@ class BinanceFutures(ExchangeInterface):
                     "positionSide": "BOTH",
                     "type": "TRAILING_STOP_MARKET",
                     "activationPrice": act_price,
-                    "quantity": half_qty,
+                    "quantity": qty,
                     "reduceOnly": "true",
                     "callbackRate": round_float_to_str(number=cr, decimal_places=1),
                     "workingType": "MARK_PRICE",
@@ -275,7 +275,7 @@ class BinanceFutures(ExchangeInterface):
                     "side": side_from_direction(direction=direction),
                     "positionSide": "BOTH",
                     "type": "TAKE_PROFIT",
-                    "quantity": half_qty,
+                    "quantity": qty,
                     "stopPrice": act_price,  # Trigger
                     "price": round_float_to_str(number=tp, decimal_places=tick_size),  # TP
                     "reduceOnly": "true",
