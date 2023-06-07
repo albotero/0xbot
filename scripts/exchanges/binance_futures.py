@@ -214,11 +214,9 @@ class BinanceFutures(ExchangeInterface):
                 "symbol": symbol,
                 "side": side_from_direction(direction=direction),
                 "positionSide": "BOTH",
-                "type": "STOP",
-                "quantity": qty,
-                "stopPrice": round_float_to_str(number=act_price, decimal_places=tick_size),  # Trigger
-                "price": round_float_to_str(number=sl, decimal_places=tick_size),  # SL
-                "reduceOnly": "true",
+                "type": "STOP_MARKET",
+                "stopPrice": round_float_to_str(number=sl, decimal_places=tick_size),  # SL
+                "closePosition": "true",
                 "workingType": "MARK_PRICE",
             }
             sl_response = C.Style("Stop Loss: ", C.DARKCYAN) + (
@@ -236,10 +234,9 @@ class BinanceFutures(ExchangeInterface):
                 "symbol": symbol,
                 "side": side_from_direction(direction=direction),
                 "positionSide": "BOTH",
-                "type": "TAKE_PROFIT",
+                "type": "TAKE_PROFIT_MARKET",
                 "quantity": half_qty,
-                "stopPrice": act_price,  # Trigger
-                "price": round_float_to_str(number=tp, decimal_places=tick_size),  # TP
+                "stopPrice": round_float_to_str(number=tp, decimal_places=tick_size),  # TP
                 "reduceOnly": "true",
                 "workingType": "MARK_PRICE",
             }
@@ -274,11 +271,9 @@ class BinanceFutures(ExchangeInterface):
                     "symbol": symbol,
                     "side": side_from_direction(direction=direction),
                     "positionSide": "BOTH",
-                    "type": "TAKE_PROFIT",
-                    "quantity": qty,
-                    "stopPrice": act_price,  # Trigger
-                    "price": round_float_to_str(number=tp, decimal_places=tick_size),  # TP
-                    "reduceOnly": "true",
+                    "type": "TAKE_PROFIT_MARKET",
+                    "stopPrice": round_float_to_str(number=tp, decimal_places=tick_size),  # TP
+                    "closePosition": "true",
                     "workingType": "MARK_PRICE",
                 }
                 tp2_response = C.Style("Take Profit 2: ", C.DARKCYAN) + (
