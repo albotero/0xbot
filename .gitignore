@@ -3,6 +3,10 @@
 .DS_Store
 *.icloud
 
+# Virtual Environment
+#
+.venv
+
 # Sensitive
 #
 bot-config.json
